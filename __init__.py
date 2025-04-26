@@ -29,7 +29,6 @@ from . import operators
 from . import ui
 from . import utils
 from . import algorithms
-from . import exporters
 
 # Force reload in case of development
 if "bpy" in locals():
@@ -38,10 +37,6 @@ if "bpy" in locals():
     importlib.reload(ui)
     importlib.reload(utils)
     importlib.reload(algorithms)
-    importlib.reload(exporters)
-
-# Classes to register
-classes = []
 
 def register():
     """Register the add-on and all its components"""
@@ -54,19 +49,19 @@ def register():
     # Register UI
     ui.register()
     
+    # Register utils (if needed)
+    utils.register()
+    
     # Register algorithms
     algorithms.register()
-    
-    # Register exporters
-    exporters.register()
     
     print("Math Playground: All components registered successfully!")
 
 def unregister():
     """Unregister the add-on and all its components"""
     # Unregister in reverse order
-    exporters.unregister()
     algorithms.unregister()
+    utils.unregister()
     ui.unregister()
     operators.unregister()
     properties.unregister()

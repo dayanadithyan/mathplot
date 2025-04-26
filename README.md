@@ -90,34 +90,33 @@ The interface is organized by mathematical domains:
 
 ## Project Structure
 
-```
+```markdown
 math_playground/
-  ├── __init__.py            # Main registration point
-  ├── properties.py          # Property definitions
+  ├── __init__.py
+  ├── properties.py
   ├── utils/
   │   ├── __init__.py
-  │   ├── materials.py       # Material utilities
-  │   ├── collections.py     # Collection management
-  │   ├── progress.py        # Progress reporting
-  │   ├── math_utils.py      # Mathematical utilities
-  │   └── instancing.py      # Object instancing
+  │   ├── materials.py
+  │   ├── collections.py
+  │   ├── progress.py
+  │   └── math_utils.py
   ├── operators/
   │   ├── __init__.py
-  │   ├── linear_algebra.py  # Linear algebra operators
-  │   ├── number_theory.py   # Number theory operators
-  │   ├── analysis.py        # Function analysis operators
-  │   ├── graph_theory.py    # Graph theory operators
-  │   └── common.py          # Common operators
+  │   ├── linear_algebra.py
+  │   ├── number_theory.py
+  │   ├── analysis.py
+  │   ├── graph_theory.py
+  │   └── common.py
   ├── ui/
   │   ├── __init__.py
-  │   ├── panels.py          # UI panel definitions
-  │   └── module_selectors.py # Module selection operators
+  │   ├── panels.py
+  │   └── module_selectors.py
   └── algorithms/
       ├── __init__.py
-      ├── differential.py    # Differential equations
-      ├── fourier.py         # Fourier series
-      ├── complex.py         # Complex number operations
-      └── graph_algorithms.py # Graph algorithms
+      ├── differential.py
+      ├── fourier.py
+      ├── complex.py
+      └── graph_algorithms.py
 ```
 
 ## License
