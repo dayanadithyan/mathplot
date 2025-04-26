@@ -8,6 +8,14 @@ from .. import progress
 # ----------------------------------------
 class CollectionHelpers:
     """Helper methods for collection management"""
+    """Helper methods for Blender collections"""
+    @staticmethod
+    def link_to_scene(obj, collection_name="Math_Playground"):
+        add_object_to_collection(obj, collection_name)  # Reuse your existing function
+
+    @staticmethod
+    def ensure_exists(name):
+        return get_collection(name)  # Reuse your existing function
     @staticmethod
     def safe_get_collection(name):
         return bpy.data.collections.get(name, None)

@@ -15,6 +15,8 @@ from .utils.collections import CollectionHelpers
 from .math_utils import MathUtils
 from .progress import ProgressTracker
 from .properties import MathPlotProperties
+from .utils import collections  # Add this line
+
 
 # import blender operators, ui, algorithms, utils
 from .operators import register as register_operators, unregister as unregister_operators
@@ -26,7 +28,7 @@ def register():
     # register core modules if they need Blender registration hooks
     MathPlotProperties.register()
     ProgressTracker.register()
-    CollectionHelpers.register()
+    collections.register()  # Call your collection registration
     MathUtils.register()
     # register subpackages
     register_utils()
