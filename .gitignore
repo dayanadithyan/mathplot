@@ -1,0 +1,14 @@
+# python
+__pycache__/
+*.py[cod]
+
+# blender temp
+*.blend1
+*.blend2
+
+# system files
+.DS_Store
+
+# IDE/config
+*.vscode/
+.idea/
