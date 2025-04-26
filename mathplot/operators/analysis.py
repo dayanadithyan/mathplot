@@ -5,8 +5,7 @@ import math
 import numpy as np
 from bpy.types import Operator
 from mathutils import Vector
-from ..utils import materials, collections, progress, math_utils
-
+from mathplot.utils.collections import CollectionHelpers
 class MATH_OT_PlotFunction(Operator):
     """Plot a function y=f(x)"""
     bl_idname = "math.plot_function"

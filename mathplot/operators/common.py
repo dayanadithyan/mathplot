@@ -2,8 +2,7 @@
 
 import bpy
 from bpy.types import Operator
-from ..utils import collections
-
+from mathplot.utils.collections import CollectionHelpers
 class MATH_OT_ClearAll(Operator):
     """Clear all math objects from the scene"""
     bl_idname = "math.clear_all"

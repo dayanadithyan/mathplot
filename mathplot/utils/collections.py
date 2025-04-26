@@ -1,12 +1,22 @@
 # utils/collections.py - Collection utilities for Math Playground
 
 import bpy
-from . import progress
+from .. import progress
 
 # ----------------------------------------
 # Collection Management Functions
 # ----------------------------------------
+class CollectionHelpers:
+    """Helper methods for collection management"""
+    @staticmethod
+    def safe_get_collection(name):
+        return bpy.data.collections.get(name, None)
 
+    @staticmethod
+    def purge_empty_collections():
+        for col in [c for c in bpy.data.collections if not c.objects]:
+            bpy.data.collections.remove(col)
+            
 def get_collection(name, parent=None):
     """Get or create a collection with the given name.
     

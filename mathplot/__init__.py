@@ -11,7 +11,7 @@ bl_info = {
 }
 
 # import submodules from the local package
-from .collections import CollectionHelpers
+from .utils.collections import CollectionHelpers
 from .math_utils import MathUtils
 from .progress import ProgressTracker
 from .properties import MathPlotProperties

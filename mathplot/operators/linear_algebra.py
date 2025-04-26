@@ -5,8 +5,7 @@ import math
 import numpy as np
 from bpy.types import Operator
 from mathutils import Vector, Matrix
-from ..utils import materials, collections, progress, math_utils
-
+from mathplot.utils.collections import CollectionHelpers
 class MATH_OT_AddVector(Operator):
     """Add a vector to the scene"""
     bl_idname = "math.add_vector"

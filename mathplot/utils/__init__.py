@@ -4,6 +4,9 @@ from . import materials
 from . import collections
 from . import progress
 from . import math_utils
+from .collections import CollectionHelpers
+
+__all__ = ["CollectionHelpers"]
 
 def register():
     """Register all utility modules"""

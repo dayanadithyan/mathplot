@@ -5,8 +5,7 @@ import math
 import random
 import numpy as np
 from bpy.types import Operator
-from ..utils import materials, collections, progress, math_utils
-
+from mathplot.utils.collections import CollectionHelpers
 class MATH_OT_GeneratePrimes(Operator):
     """Generate prime numbers up to a limit"""
     bl_idname = "math.generate_primes"
