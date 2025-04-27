@@ -1,4 +1,4 @@
-# Math Playground
+# Math Playground - Learn to enjoy the 'mess'
 
 Blender add-on for mathematical visualization in 3D space. Implements algorithms for linear algebra, number theory, analysis, graph theory, differential equations, complex analysis, and Fourier series. More to come.
 
