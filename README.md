@@ -39,13 +39,38 @@ Example (vector field):
 ## Architecture
 
 ```md
-mathplot/
-├── __init__.py          # Registration and metadata
-├── properties.py        # Property group definitions
-├── algorithms/          # Mathematical implementations
-├── operators/           # Blender operator implementations
-├── ui/                  # Interface components
-└── utils/               # Helper functions
+/mathplot/
+  ├── __init__.py - Package initialization
+  │
+  ├── algorithms/ - Mathematical implementations
+  │   ├── __init__.py
+  │   ├── complex.py - Complex analysis algorithms
+  │   ├── differential.py - Differential equation solvers
+  │   ├── fourier.py - Fourier series visualization
+  │   └── graph_algorithms.py - Graph theory algorithms
+  │
+  ├── operators/ - Blender operator implementations
+  │   ├── __init__.py
+  │   ├── analysis.py - Function plotting, vector fields
+  │   ├── common.py - General operators
+  │   ├── graph_theory.py - Graph creation and algorithms
+  │   ├── linear_algebra.py - Vector/matrix operations
+  │   └── number_theory.py - Sequence generation
+  │
+  ├── ui/ - Interface components
+  │   ├── __init__.py
+  │   ├── module_selectors.py - Module switching
+  │   └── panels.py - UI panel definitions
+  │
+  └── utils/ - Helper functions
+      ├── __init__.py
+      ├── collections.py - Blender collection management
+      ├── error_utils.py - Error handling utilities
+      ├── import_utils.py - Dynamic module loading
+      ├── materials.py - Material creation and management
+      ├── math_utils.py - Mathematical utility functions
+      ├── performance.py - Optimization utilities
+      └── progress.py - Progress reporting for long operations
 ```
 
 ## Dependencies

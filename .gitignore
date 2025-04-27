@@ -1,14 +1,92 @@
-# python
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
 
-# blender temp
+# Blender specific
 *.blend1
 *.blend2
+*.blend3
 
-# system files
-.DS_Store
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# IDE/config
-*.vscode/
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Visual Studio / VS Code
+.vscode/
+*.code-workspace
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Logs
+*.log
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Profiling
+*.prof
+
+# Project-specific
+.mathplot_cache/
+temp/
+backup/
+
+# Ignore local configuration
+config.ini
+local_settings.py
+
+# Documentation build
+docs/_build/
+
+# Development artifacts
+*.bak
+*~
