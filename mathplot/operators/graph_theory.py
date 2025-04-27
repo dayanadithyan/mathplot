@@ -5,7 +5,7 @@ import math
 import random
 import numpy as np
 from bpy.types import Operator
-
+from mathutils import Vector
 from ..utils import materials, progress
 from ..utils.collections import get_collection, clear_collection
 
