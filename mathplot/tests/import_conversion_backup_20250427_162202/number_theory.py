@@ -10,12 +10,13 @@ from ..utils import materials, progress
 from ..utils.collections import get_collection, clear_collection
 from ..utils.math_utils import generate_primes, generate_sequence
 
+
 class MATH_OT_GeneratePrimes(Operator):
     """Generate prime numbers up to a limit"""
     bl_idname = "math.generate_primes"
     bl_label = "Generate Primes"
     bl_options = {'REGISTER', 'UNDO'}
-    
+
     limit: bpy.props.IntProperty(
         name="Limit",
         description="Generate primes up to this number",
@@ -23,7 +24,7 @@ class MATH_OT_GeneratePrimes(Operator):
         min=2,
         max=10000,
     )
-    
+
     arrangement: bpy.props.EnumProperty(
         name="Arrangement",
         description="How to arrange the prime numbers",
@@ -34,7 +35,7 @@ class MATH_OT_GeneratePrimes(Operator):
         ],
         default='LINE',
     )
-    
+
     radius: bpy.props.FloatProperty(
         name="Sphere Radius",
         description="Radius of the spheres representing primes",
@@ -42,7 +43,7 @@ class MATH_OT_GeneratePrimes(Operator):
         min=0.01,
         max=1.0,
     )
-    
+
     spacing: bpy.props.FloatProperty(
         name="Spacing",
         description="Spacing between spheres",
@@ -50,7 +51,7 @@ class MATH_OT_GeneratePrimes(Operator):
         min=0.1,
         max=5.0,
     )
-    
+
     def execute(self, context):
             """execute function.
     """

@@ -3,6 +3,7 @@
 import bpy
 from bpy.types import Panel
 
+
 class MATH_PT_Main(Panel):
     """Main panel for Math Playground"""
     bl_label = "Math Playground"
@@ -10,7 +11,7 @@ class MATH_PT_Main(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Math Playground'
-    
+
     def draw(self, context):
             """draw function.
     """

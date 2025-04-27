@@ -6,6 +6,7 @@ from mathplot.operators import analysis
 from mathplot.operators import graph_theory
 from mathplot.operators import common
 
+
 def register():
     """Register all operator modules"""
     linear_algebra.register()
@@ -13,6 +14,7 @@ def register():
     analysis.register()
     graph_theory.register()
     common.register()
+
 
 def unregister():
     """Unregister all operator modules"""

@@ -3,10 +3,12 @@
 from mathplot.ui import panels
 from mathplot.ui import module_selectors
 
+
 def register():
     """Register all UI modules"""
     module_selectors.register()
     panels.register()
+
 
 def unregister():
     """Unregister all UI modules"""

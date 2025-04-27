@@ -7,6 +7,7 @@ from mathplot import __version__ as VERSION
 
 ADDON_NAME = "mathplot"
 
+
 def make_release():
     """
     creates a zip file of the mathplot add-on under the name:
@@ -31,6 +32,7 @@ def make_release():
         for file_path in files:
             zf.write(file_path)
     print(f"created {zip_name}")
+
 
 if __name__ == "__main__":
     make_release()

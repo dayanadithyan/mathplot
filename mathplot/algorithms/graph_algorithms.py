@@ -4,14 +4,15 @@ import heapq
 import numpy as np
 import math
 
+
 def shortest_path_dijkstra(graph, start, end):
     """Find shortest path between two nodes using Dijkstra's algorithm.
-    
+
     Args:
         graph (dict): Adjacency list representation {node: [(neighbor, weight), ...]}
         start: Starting node
         end: Ending node
-        
+
     Returns:
         tuple: (distance, path) - Total distance and node path
     """
@@ -20,44 +21,46 @@ def shortest_path_dijkstra(graph, start, end):
     distances[start] = 0
     previous = {node: None for node in graph}
     unvisited = set(graph.keys())
-    
+
     while unvisited:
         # Find the unvisited node with the smallest distance
         current = min(unvisited, key=lambda x: distances[x])
-        
-        # If we reached the end node or if the smallest distance is infinity, stop
+
+        # If we reached the end node or if the smallest distance is infinity,
+        # stop
         if current == end or distances[current] == float('inf'):
             break
-        
+
         # Remove the current node from unvisited
         unvisited.remove(current)
-        
+
         # Update distances to neighbors
         for neighbor, weight in graph[current]:
             distance = distances[current] + weight
             if distance < distances[neighbor]:
                 distances[neighbor] = distance
                 previous[neighbor] = current
-    
+
     # Reconstruct the path
     if distances[end] == float('inf'):
         return float('inf'), []  # No path found
-    
+
     path = []
     current = end
     while current is not None:
         path.append(current)
         current = previous[current]
-    
+
     path.reverse()
     return distances[end], path
 
+
 def minimum_spanning_tree_kruskal(graph):
     """Find minimum spanning tree using Kruskal's algorithm.
-    
+
     Args:
         graph (dict): Adjacency list representation {node: [(neighbor, weight), ...]}
-        
+
     Returns:
         list: List of (start, end, weight) edges in the MST
     """
@@ -67,12 +70,12 @@ def minimum_spanning_tree_kruskal(graph):
         for neighbor, weight in neighbors:
             if node < neighbor:  # Avoid duplicates for undirected graph
                 edges.append((node, neighbor, weight))
-    
+
     edges.sort(key=lambda x: x[2])
-    
+
     # Initialize disjoint set data structure
     parent = {node: node for node in graph}
-    
+
     def find(x):
             """find function.
     """

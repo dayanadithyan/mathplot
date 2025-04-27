@@ -10,19 +10,20 @@ from ..utils import materials, progress
 from ..utils.collections import get_collection, clear_collection
 from ..utils.math_utils import parse_matrix
 
+
 class MATH_OT_AddVector(Operator):
     """Add a vector to the scene"""
     bl_idname = "math.add_vector"
     bl_label = "Add Vector"
     bl_options = {'REGISTER', 'UNDO'}
-    
+
     vector: bpy.props.FloatVectorProperty(
         name="Vector",
         description="Vector coordinates (x, y, z)",
         default=(1.0, 1.0, 1.0),
         subtype='XYZ',
     )
-    
+
     color: bpy.props.FloatVectorProperty(
         name="Color",
         description="Vector color",
@@ -32,13 +33,13 @@ class MATH_OT_AddVector(Operator):
         max=1.0,
         subtype='COLOR',
     )
-    
+
     name: bpy.props.StringProperty(
         name="Name",
         description="Vector name",
         default="Vector",
     )
-    
+
     def execute(self, context):
             """execute function.
     """

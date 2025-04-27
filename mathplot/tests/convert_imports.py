@@ -8,28 +8,30 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+
 def create_backup(files):
     """Create backups of all Python files"""
     backup_dir = f"import_conversion_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     os.makedirs(backup_dir, exist_ok=True)
-    
+
     for file_path in files:
         # Get the file name only, not the full path
         dest_path = Path(backup_dir) / file_path.name
         shutil.copy2(file_path, dest_path)
         print(f"  - Backed up {file_path.name}")
-    
+
     return backup_dir
+
 
 def get_module_path_from_file(file_path):
     """Determine the module path based on file location"""
     # Get the absolute path and normalize it
     abs_path = file_path.resolve()
-    
+
     # Extract the module path
     # This assumes the file is in a structure like mathplot/submodule/file.py
     parts = abs_path.parts
-    
+
     # Try to find 'mathplot' in the path
     try:
         mathplot_index = parts.index('mathplot')
@@ -39,6 +41,7 @@ def get_module_path_from_file(file_path):
         # If 'mathplot' not found, assume we're in the root of the project
         return 'mathplot'
 
+
 def process_file(file_path):
     """Process a single Python file to update imports"""
     try:
@@ -47,56 +50,60 @@ def process_file(file_path):
     except Exception as e:
         print(f"Error reading {file_path}: {e}")
         return False
-    
+
     # Track changes
     changes_made = False
     original_content = content
-    
+
     # Get the module path for this file
     module_path = get_module_path_from_file(file_path)
-    
+
     # Process the file content using regex for better reliability
     # 1. Handle 'from . import x' or 'from . import *'
     for match in re.finditer(r'from\s+\.\s+import\s+([^#\n]+)', content):
         imported_items = match.group(1).strip()
         old_import = match.group(0)
-        
+
         if imported_items == '*':
             new_import = f"# TODO: Replace wildcard import: from {module_path} import specific_items"
         else:
             new_import = f"from {module_path} import {imported_items}"
-        
+
         content = content.replace(old_import, new_import)
         changes_made = True
         print(f"  - Updated: {old_import} -> {new_import}")
-    
+
     # 2. Handle 'from .submodule import x' or 'from .submodule import *'
-    for match in re.finditer(r'from\s+\.([a-zA-Z0-9_]+)\s+import\s+([^#\n]+)', content):
+    for match in re.finditer(
+    r'from\s+\.([a-zA-Z0-9_]+)\s+import\s+([^#\n]+)',
+     content):
         submodule = match.group(1).strip()
         imported_items = match.group(2).strip()
         old_import = match.group(0)
-        
+
         if imported_items == '*':
             new_import = f"# TODO: Replace wildcard import: from {module_path}.{submodule} import specific_items"
         else:
             new_import = f"from {module_path}.{submodule} import {imported_items}"
-        
+
         content = content.replace(old_import, new_import)
         changes_made = True
         print(f"  - Updated: {old_import} -> {new_import}")
-    
+
     # 3. Handle 'from module import *' (non-relative wildcard imports)
-    for match in re.finditer(r'from\s+([a-zA-Z0-9_.]+)\s+import\s+\*', content):
+    for match in re.finditer(
+    r'from\s+([a-zA-Z0-9_.]+)\s+import\s+\*',
+     content):
         module_name = match.group(1).strip()
         old_import = match.group(0)
-        
+
         # Skip if this is already a 'mathplot' import
         if not module_name.startswith('mathplot'):
             new_import = f"# TODO: Replace wildcard import: from {module_name} import specific_items"
             content = content.replace(old_import, new_import)
             changes_made = True
             print(f"  - Flagged for review: {old_import}")
-    
+
     # Write the modified content back to the file if changes were made
     if changes_made:
         try:
@@ -111,10 +118,12 @@ def process_file(file_path):
                     f.write(original_content)
                 print(f"  - Restored original content for {file_path.name}")
             except:
-                print(f"  - WARNING: Could not restore original content for {file_path.name}")
+                print(
+                    f"  - WARNING: Could not restore original content for {file_path.name}")
             return False
-    
+
     return changes_made
+
 
 def main():
         """main function.

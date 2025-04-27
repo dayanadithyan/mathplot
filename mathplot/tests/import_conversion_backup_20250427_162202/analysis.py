@@ -10,30 +10,31 @@ from ..utils import materials, progress
 from ..utils.collections import get_collection, clear_collection
 from ..utils.math_utils import evaluate_expression
 
+
 class MATH_OT_PlotFunction(Operator):
     """Plot a function y=f(x)"""
     bl_idname = "math.plot_function"
     bl_label = "Plot Function"
     bl_options = {'REGISTER', 'UNDO'}
-    
+
     function: bpy.props.StringProperty(
         name="Function",
         description="Python expression for y=f(x)",
         default="math.sin(x)",
     )
-    
+
     x_min: bpy.props.FloatProperty(
         name="X Min",
         description="Minimum x value",
         default=-10.0,
     )
-    
+
     x_max: bpy.props.FloatProperty(
         name="X Max",
         description="Maximum x value",
         default=10.0,
     )
-    
+
     samples: bpy.props.IntProperty(
         name="Samples",
         description="Number of sample points",
@@ -41,7 +42,7 @@ class MATH_OT_PlotFunction(Operator):
         min=10,
         max=1000,
     )
-    
+
     thickness: bpy.props.FloatProperty(
         name="Curve Thickness",
         description="Thickness of the curve",
@@ -49,7 +50,7 @@ class MATH_OT_PlotFunction(Operator):
         min=0.01,
         max=0.5,
     )
-    
+
     color: bpy.props.FloatVectorProperty(
         name="Color",
         description="Curve color",
@@ -59,7 +60,7 @@ class MATH_OT_PlotFunction(Operator):
         max=1.0,
         subtype='COLOR',
     )
-    
+
     plot_type: bpy.props.EnumProperty(
         name="Plot Type",
         description="Type of plot to create",
@@ -69,25 +70,25 @@ class MATH_OT_PlotFunction(Operator):
         ],
         default='CURVE',
     )
-    
+
     z_function: bpy.props.StringProperty(
         name="Z Function",
         description="Python expression for z=f(x,y) (for surface plots)",
         default="math.sin(math.sqrt(x**2 + y**2))",
     )
-    
+
     y_min: bpy.props.FloatProperty(
         name="Y Min",
         description="Minimum y value (for surface plots)",
         default=-10.0,
     )
-    
+
     y_max: bpy.props.FloatProperty(
         name="Y Max",
         description="Maximum y value (for surface plots)",
         default=10.0,
     )
-    
+
     def execute(self, context):
             """execute function.
     """

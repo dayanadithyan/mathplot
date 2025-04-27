@@ -9,12 +9,13 @@ from mathutils import Vector
 from ..utils import materials, progress
 from ..utils.collections import get_collection, clear_collection
 
+
 class MATH_OT_CreateGraph(Operator):
     """Create a graph with nodes and edges"""
     bl_idname = "math.create_graph"
     bl_label = "Create Graph"
     bl_options = {'REGISTER', 'UNDO'}
-    
+
     node_count: bpy.props.IntProperty(
         name="Node Count",
         description="Number of nodes in the graph",
@@ -22,7 +23,7 @@ class MATH_OT_CreateGraph(Operator):
         min=2,
         max=100
     )
-    
+
     edge_probability: bpy.props.FloatProperty(
         name="Edge Probability",
         description="Probability of creating an edge between two nodes",
@@ -31,18 +32,19 @@ class MATH_OT_CreateGraph(Operator):
         max=1.0,
         subtype='FACTOR'
     )
-    
+
     layout_type: bpy.props.EnumProperty(
         name="Layout Type",
         description="Algorithm for arranging graph nodes",
         items=[
             ('CIRCLE', "Circle", "Arrange nodes in a circle"),
             ('RANDOM', "Random", "Arrange nodes randomly"),
-            ('FORCE_DIRECTED', "Force Directed", "Use force-directed layout algorithm")
+            ('FORCE_DIRECTED', "Force Directed",
+             "Use force-directed layout algorithm")
         ],
         default='CIRCLE'
     )
-    
+
     node_size: bpy.props.FloatProperty(
         name="Node Size",
         description="Size of the graph nodes",
@@ -50,7 +52,7 @@ class MATH_OT_CreateGraph(Operator):
         min=0.05,
         max=1.0
     )
-    
+
     edge_thickness: bpy.props.FloatProperty(
         name="Edge Thickness",
         description="Thickness of the graph edges",
@@ -58,7 +60,7 @@ class MATH_OT_CreateGraph(Operator):
         min=0.01,
         max=0.2
     )
-    
+
     def execute(self, context):
             """execute function.
     """

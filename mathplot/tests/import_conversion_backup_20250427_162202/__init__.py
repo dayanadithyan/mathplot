@@ -8,12 +8,14 @@ from .collections import CollectionHelpers
 
 __all__ = ["CollectionHelpers"]
 
+
 def register():
     """Register all utility modules"""
     materials.register()
     collections.register()
     progress.register()
     math_utils.register()
+
 
 def unregister():
     """Unregister all utility modules"""

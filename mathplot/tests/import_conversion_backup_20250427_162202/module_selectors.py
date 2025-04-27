@@ -3,11 +3,12 @@
 import bpy
 from bpy.types import Operator
 
+
 class WM_OT_MathLinearAlgebra(Operator):
     """Switch to Linear Algebra module"""
     bl_idname = "wm.math_linear_algebra"
     bl_label = "Linear Algebra"
-    
+
     def execute(self, context):
             """execute function.
     """

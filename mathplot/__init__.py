@@ -1,5 +1,9 @@
 # __init__.py - Main initialization file for Math Playground
 
+import os
+import sys
+import importlib
+import bpy
 bl_info = {
     "name": "Math Playground",
     "author": "DA SURENDRANATHAN",
@@ -13,23 +17,22 @@ bl_info = {
 }
 
 # Standard modules import
-import bpy
-import importlib
-import sys
-import os
 
 # Define version
 __version__ = ".".join(map(str, bl_info["version"]))
 
 # Ensure the module path is available
+
+
 def setup_addon_modules():
     """Set up the addon module path."""
     # Get the addon directory
     dirname = os.path.dirname(__file__)
-    
+
     # Add to path if not already there
     if dirname not in sys.path:
         sys.path.append(dirname)
+
 
 # Check if we need to do a reload
 if "properties" in locals():
@@ -52,45 +55,48 @@ else:
     from mathplot.utils import error_utils
 
 # Register function with improved error handling
+
+
 def register():
     """Register the add-on with comprehensive error handling."""
     try:
         # Set up addon modules path
         setup_addon_modules()
-        
+
         # Register properties first since they're used by operators and UI
         properties.register()
-        
+
         # Register utility functions
         utils.register()
-        
+
         # Register algorithms
         algorithms.register()
-        
+
         # Register operators
         operators.register()
-        
+
         # Register UI components last
         ui.register()
-        
+
         # Create the main property group for scene
-        bpy.types.Scene.math_playground = bpy.props.PointerProperty(type=properties.MathPlaygroundPropertyGroup)
-        
+        bpy.types.Scene.math_playground = bpy.props.PointerProperty(
+            type=properties.MathPlaygroundPropertyGroup)
+
         # Load and register all plugins
         utils.import_utils.plugin_interface.register_plugins()
-        
+
         print(f"Math Playground {__version__} registered successfully")
         return True
-        
+
     except Exception as e:
         # Get detailed error information
         import traceback
         error_msg = traceback.format_exc()
-        
+
         # Print error details
         print(f"Error registering Math Playground: {e}")
         print(error_msg)
-        
+
         # Show error in Blender UI if possible
         if hasattr(bpy.context, 'window_manager'):
             def draw_error(self, context):
@@ -99,9 +105,10 @@ def register():
         """draw_error function.
     """
     self.layout.label(text=f"Error registering Math Playground: {e}")
-            
-            bpy.context.window_manager.popup_menu(draw_error, title="Registration Error", icon='ERROR')
-        
+
+            bpy.context.window_manager.popup_menu(
+    draw_error, title="Registration Error", icon='ERROR')
+
         return False
 
 def unregister():
