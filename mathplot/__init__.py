@@ -6,16 +6,17 @@ import importlib
 import bpy
 
 bl_info = {
-    "name": "Math Playground",
+    "name": "mathplot",
     "author": "DA SURENDRANATHAN",
     "version": (1, 1, 0),
-    "blender": (3, 0, 0),
-    "location": "View3D > Sidebar > Math Playground",
+    "blender": (4, 4, 0),
+    "location": "View3D > Sidebar > mathplot",
     "description": "Mathematical visualization tools for Blender",
     "warning": "",
     "doc_url": "",
     "category": "3D View",
 }
+
 
 # Define version
 __version__ = ".".join(map(str, bl_info["version"]))
