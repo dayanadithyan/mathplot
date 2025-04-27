@@ -77,7 +77,7 @@ Example (vector field):
 
 ## Dependencies
 
-- Blender 3.0+
+- Blender 4.0+
 - NumPy (included with Blender)
 
 ## License
