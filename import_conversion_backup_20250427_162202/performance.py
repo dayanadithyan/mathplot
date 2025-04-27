@@ -5,7 +5,7 @@ import numpy as np
 import time
 import gc
 from mathutils import Vector, Matrix
-from mathplot.mathplot.utils import progress
+from . import progress
 
 # ----------------------------------------
 # Object Management Optimization

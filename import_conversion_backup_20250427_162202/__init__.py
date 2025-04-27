@@ -1,10 +1,10 @@
 # utils/__init__.py - Utility module initialization
 
-from mathplot.mathplot.utils import materials
-from mathplot.mathplot.utils import collections
-from mathplot.mathplot.utils import progress
-from mathplot.mathplot.utils import math_utils
-from mathplot.mathplot.utils.collections import CollectionHelpers
+from . import materials
+from . import collections
+from . import progress
+from . import math_utils
+from .collections import CollectionHelpers
 
 __all__ = ["CollectionHelpers"]
 

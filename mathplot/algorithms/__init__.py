@@ -1,9 +1,9 @@
 # algorithms/__init__.py - Algorithms module initialization
 
-from . import differential
-from . import fourier
-from . import complex
-from . import graph_algorithms
+from mathplot.mathplot.algorithms import differential
+from mathplot.mathplot.algorithms import fourier
+from mathplot.mathplot.algorithms import complex
+from mathplot.mathplot.algorithms import graph_algorithms
 
 def register():
     """Register all algorithm modules"""

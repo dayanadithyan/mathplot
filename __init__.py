@@ -41,15 +41,15 @@ if "properties" in locals():
     importlib.reload(utils)
 else:
     # First import
-    from . import properties
-    from . import operators
-    from . import ui
-    from . import algorithms
-    from . import utils
+    from mathplot import properties
+    from mathplot import operators
+    from mathplot import ui
+    from mathplot import algorithms
+    from mathplot import utils
 
     # Import specific utility modules first to ensure proper initialization
-    from .utils import import_utils
-    from .utils import error_utils
+    from mathplot.utils import import_utils
+    from mathplot.utils import error_utils
 
 # Register function with improved error handling
 def register():

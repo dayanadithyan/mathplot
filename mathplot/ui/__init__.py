@@ -1,7 +1,7 @@
 # ui/__init__.py - UI module initialization
 
-from . import panels
-from . import module_selectors
+from mathplot.mathplot.ui import panels
+from mathplot.mathplot.ui import module_selectors
 
 def register():
     """Register all UI modules"""
