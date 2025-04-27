@@ -9,7 +9,15 @@ class WM_OT_MathLinearAlgebra(Operator):
     bl_label = "Linear Algebra"
     
     def execute(self, context):
-        context.scene.math_playground.active_module = 'LINEAR_ALGEBRA'
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    context.scene.math_playground.active_module = 'LINEAR_ALGEBRA'
         return {'FINISHED'}
 
 class WM_OT_MathNumberTheory(Operator):
@@ -18,7 +26,15 @@ class WM_OT_MathNumberTheory(Operator):
     bl_label = "Number Theory"
     
     def execute(self, context):
-        context.scene.math_playground.active_module = 'NUMBER_THEORY'
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    context.scene.math_playground.active_module = 'NUMBER_THEORY'
         return {'FINISHED'}
 
 class WM_OT_MathAnalysis(Operator):
@@ -27,7 +43,15 @@ class WM_OT_MathAnalysis(Operator):
     bl_label = "Analysis"
     
     def execute(self, context):
-        context.scene.math_playground.active_module = 'ANALYSIS'
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    context.scene.math_playground.active_module = 'ANALYSIS'
         return {'FINISHED'}
 
 class WM_OT_MathGraphTheory(Operator):
@@ -36,7 +60,15 @@ class WM_OT_MathGraphTheory(Operator):
     bl_label = "Graph Theory"
     
     def execute(self, context):
-        context.scene.math_playground.active_module = 'GRAPH_THEORY'
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    context.scene.math_playground.active_module = 'GRAPH_THEORY'
         return {'FINISHED'}
 
 # Registration functions

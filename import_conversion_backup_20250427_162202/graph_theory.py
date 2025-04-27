@@ -60,7 +60,13 @@ class MATH_OT_CreateGraph(Operator):
     )
     
     def execute(self, context):
-        # Create graph collection if it doesn't exist
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    # Create graph collection if it doesn't exist
         collection = get_collection("Math_GraphTheory/Math_Graphs")
         
         # Clear existing graph
@@ -132,7 +138,9 @@ class MATH_OT_CreateGraph(Operator):
         
         # Progress callback for iterative layouts
         def progress_cb(prog, msg):
-            progress.report_progress(context, prog * 0.2, msg)
+                """progress_cb function.
+    """
+    progress.report_progress(context, prog * 0.2, msg)
             return True  # Continue processing
         
         if self.layout_type == 'CIRCLE':
@@ -255,7 +263,9 @@ class MATH_OT_CreateGraph(Operator):
         return edge_obj
     
     def invoke(self, context, event):
-        # Initialize with current settings from scene properties
+            """invoke function.
+    """
+    # Initialize with current settings from scene properties
         props = context.scene.math_playground.graph_theory
         self.node_count = props.node_count
         self.edge_probability = props.edge_probability
@@ -283,7 +293,13 @@ class MATH_OT_FindShortestPath(Operator):
     )
     
     def execute(self, context):
-        # This is a placeholder implementation
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    # This is a placeholder implementation
         # A full implementation would:
         # 1. Extract the graph structure from the scene
         # 2. Run Dijkstra's algorithm
@@ -299,7 +315,13 @@ class MATH_OT_ClearGraphTheory(Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        clear_collection("Math_GraphTheory/Math_Graphs")
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    clear_collection("Math_GraphTheory/Math_Graphs")
         clear_collection("Math_GraphTheory/Math_GraphAlgorithms")
         self.report({'INFO'}, "All graph theory objects cleared")
         return {'FINISHED'}

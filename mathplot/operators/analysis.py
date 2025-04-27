@@ -89,7 +89,15 @@ class MATH_OT_PlotFunction(Operator):
     )
     
     def execute(self, context):
-        # Create function collection if it doesn't exist
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    # Create function collection if it doesn't exist
         collection = get_collection("Math_Analysis/Math_Functions")
         
         # Create material for function
@@ -333,7 +341,11 @@ class MATH_OT_PlotFunction(Operator):
                 collection.objects.link(obj)
     
     def invoke(self, context, event):
-        # Initialize with current settings
+            """invoke function.
+    """
+        """invoke function.
+    """
+    # Initialize with current settings
         props = context.scene.math_playground.analysis
         self.function = props.function_expression
         self.x_min = props.x_min
@@ -404,7 +416,15 @@ class MATH_OT_PlotParametric(Operator):
     )
     
     def execute(self, context):
-        # Create function collection if it doesn't exist
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    # Create function collection if it doesn't exist
         collection = get_collection("Math_Analysis/Math_Parametric")
         
         # Create material for function
@@ -658,7 +678,15 @@ class MATH_OT_PlotVectorField(Operator):
     )
     
     def execute(self, context):
-        # Create vector field collection if it doesn't exist
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    # Create vector field collection if it doesn't exist
         collection = get_collection("Math_Analysis/Math_VectorFields")
         
         # Clear existing vector field
@@ -884,7 +912,11 @@ class MATH_OT_PlotVectorField(Operator):
             collection.objects.link(obj)
     
     def invoke(self, context, event):
-        # Initialize with current settings
+            """invoke function.
+    """
+        """invoke function.
+    """
+    # Initialize with current settings
         props = context.scene.math_playground.analysis
         self.x_component = props.vector_field_x
         self.y_component = props.vector_field_y
@@ -898,7 +930,15 @@ class MATH_OT_ClearAnalysis(Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        clear_collection("Math_Analysis/Math_Functions")
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    clear_collection("Math_Analysis/Math_Functions")
         clear_collection("Math_Analysis/Math_VectorFields")
         clear_collection("Math_Analysis/Math_Parametric")
         self.report({'INFO'}, "All analysis objects cleared")

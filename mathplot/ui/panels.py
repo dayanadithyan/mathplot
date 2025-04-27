@@ -12,7 +12,17 @@ class MATH_PT_Main(Panel):
     bl_category = 'Math Playground'
     
     def draw(self, context):
-        layout = self.layout
+            """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+    layout = self.layout
         props = context.scene.math_playground
         
         layout.label(text="Choose a module:")
@@ -36,10 +46,28 @@ class MATH_PT_LinearAlgebra(Panel):
     
     @classmethod
     def poll(cls, context):
-        return context.scene.math_playground.active_module == 'LINEAR_ALGEBRA'
+            """poll function.
+    """
+        """poll function.
+    """
+        """poll function.
+    """
+        """poll function.
+    """
+    return context.scene.math_playground.active_module == 'LINEAR_ALGEBRA'
     
     def draw(self, context):
-        layout = self.layout
+            """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+    layout = self.layout
         props = context.scene.math_playground.linear_algebra
         
         # Vector properties
@@ -72,10 +100,28 @@ class MATH_PT_NumberTheory(Panel):
     
     @classmethod
     def poll(cls, context):
-        return context.scene.math_playground.active_module == 'NUMBER_THEORY'
+            """poll function.
+    """
+        """poll function.
+    """
+        """poll function.
+    """
+        """poll function.
+    """
+    return context.scene.math_playground.active_module == 'NUMBER_THEORY'
     
     def draw(self, context):
-        layout = self.layout
+            """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+    layout = self.layout
         props = context.scene.math_playground.number_theory
         
         # Prime generation
@@ -113,10 +159,28 @@ class MATH_PT_Analysis(Panel):
     
     @classmethod
     def poll(cls, context):
-        return context.scene.math_playground.active_module == 'ANALYSIS'
+            """poll function.
+    """
+        """poll function.
+    """
+        """poll function.
+    """
+        """poll function.
+    """
+    return context.scene.math_playground.active_module == 'ANALYSIS'
     
     def draw(self, context):
-        layout = self.layout
+            """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+    layout = self.layout
         props = context.scene.math_playground.analysis
         
         # Function plotting
@@ -153,10 +217,28 @@ class MATH_PT_GraphTheory(Panel):
     
     @classmethod
     def poll(cls, context):
-        return context.scene.math_playground.active_module == 'GRAPH_THEORY'
+            """poll function.
+    """
+        """poll function.
+    """
+        """poll function.
+    """
+        """poll function.
+    """
+    return context.scene.math_playground.active_module == 'GRAPH_THEORY'
     
     def draw(self, context):
-        layout = self.layout
+            """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+        """draw function.
+    """
+    layout = self.layout
         props = context.scene.math_playground.graph_theory
         
         # Graph creation

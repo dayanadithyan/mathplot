@@ -40,7 +40,13 @@ class MATH_OT_AddVector(Operator):
     )
     
     def execute(self, context):
-        # Create vector collection if it doesn't exist
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    # Create vector collection if it doesn't exist
         collection = get_collection("Math_LinearAlgebra/Math_Vectors")
         
         # Create vector material
@@ -121,7 +127,11 @@ class MATH_OT_AddVector(Operator):
         return {'FINISHED'}
     
     def invoke(self, context, event):
-        # Initialize with current settings
+            """invoke function.
+    """
+        """invoke function.
+    """
+    # Initialize with current settings
         self.color = context.scene.math_playground.linear_algebra.vector_color
         return self.execute(context)
 
@@ -138,7 +148,13 @@ class MATH_OT_ApplyMatrix(Operator):
     )
     
     def execute(self, context):
-        try:
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    try:
             # Parse matrix
             matrix_data = parse_matrix(self.matrix_rows)
             
@@ -208,7 +224,11 @@ class MATH_OT_ApplyMatrix(Operator):
         return {'FINISHED'}
     
     def invoke(self, context, event):
-        self.matrix_rows = context.scene.math_playground.linear_algebra.matrix_input
+            """invoke function.
+    """
+        """invoke function.
+    """
+    self.matrix_rows = context.scene.math_playground.linear_algebra.matrix_input
         return self.execute(context)
 
 class MATH_OT_ClearVectors(Operator):
@@ -218,7 +238,13 @@ class MATH_OT_ClearVectors(Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        clear_collection("Math_LinearAlgebra/Math_Vectors")
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    clear_collection("Math_LinearAlgebra/Math_Vectors")
         self.report({'INFO'}, "All vectors cleared")
         return {'FINISHED'}
 

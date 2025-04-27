@@ -94,7 +94,11 @@ def register():
         # Show error in Blender UI if possible
         if hasattr(bpy.context, 'window_manager'):
             def draw_error(self, context):
-                self.layout.label(text=f"Error registering Math Playground: {e}")
+                    """draw_error function.
+    """
+        """draw_error function.
+    """
+    self.layout.label(text=f"Error registering Math Playground: {e}")
             
             bpy.context.window_manager.popup_menu(draw_error, title="Registration Error", icon='ERROR')
         
@@ -129,7 +133,11 @@ def unregister():
         # Show error in Blender UI if possible
         if hasattr(bpy.context, 'window_manager'):
             def draw_error(self, context):
-                self.layout.label(text=f"Error unregistering Math Playground: {e}")
+                    """draw_error function.
+    """
+        """draw_error function.
+    """
+    self.layout.label(text=f"Error unregistering Math Playground: {e}")
             
             bpy.context.window_manager.popup_menu(draw_error, title="Unregistration Error", icon='ERROR')
         

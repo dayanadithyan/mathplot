@@ -57,12 +57,16 @@ def import_lazy(module_path: str, names: List[str] = None) -> Dict[str, Any]:
     """
     class LazyProxy:
         def __init__(self, module_path: str, name: str):
-            self.module_path = module_path
+                """__init__ function.
+    """
+    self.module_path = module_path
             self.name = name
             self._obj = None
         
         def __call__(self, *args, **kwargs):
-            if self._obj is None:
+                """__call__ function.
+    """
+    if self._obj is None:
                 module = importlib.import_module(self.module_path)
                 self._obj = getattr(module, self.name)
             return self._obj(*args, **kwargs)

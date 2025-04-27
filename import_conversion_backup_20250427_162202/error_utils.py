@@ -1,4 +1,66 @@
+from typing import Callable, List, Optional, Set, Tuple
 # mathplot/utils/error_utils.py (continued)
+
+
+def validate_expression(expression: str, required_vars: List[str], test_vars: Dict[str, Any]) -> Tuple[bool, str]:
+    """Validate a mathematical expression.
+    
+    Args:
+        expression: The expression to validate
+        required_vars: List of variable names that should be used in the expression
+        test_vars: Dictionary of test values for variables
+    
+    Returns:
+        Tuple containing (is_valid, error_message)
+    """
+    # Check if expression is empty
+    if not expression or not expression.strip():
+        return False, "Expression cannot be empty"
+    
+    # Check for required variables
+    for var in required_vars:
+        if var not in expression:
+            return False, f"Expression should use the variable '{var}'"
+    
+    # Try to evaluate the expression with test values
+    try:
+        # Create the safe namespace with math functions
+        import math
+        import numpy as np
+        
+        safe_namespace = {
+            "math": math,
+            "np": np,
+            "sin": math.sin,
+            "cos": math.cos,
+            "tan": math.tan,
+            "sqrt": math.sqrt,
+            "exp": math.exp,
+            "log": math.log,
+            "log10": math.log10,
+            "log2": math.log2,
+            "pi": math.pi,
+            "e": math.e,
+            "abs": abs,
+            "pow": pow,
+            "min": min,
+            "max": max,
+            **test_vars
+        }
+        
+        # Check for unsafe operations
+        unsafe_terms = ["__", "import ", "eval(", "exec(", "compile(", "globals(", "locals(", 
+                       "getattr(", "setattr(", "delattr(", "open(", "file(", "os.", "sys."]
+        for term in unsafe_terms:
+            if term in expression:
+                return False, f"Unsafe term detected in expression: {term}"
+        
+        # Try to evaluate
+        eval(expression, {"__builtins__": {}}, safe_namespace)
+        return True, ""
+    
+    except Exception as e:
+        return False, f"Error evaluating expression: {str(e)}"
 
 # ----------------------------------------
 # Function Validation

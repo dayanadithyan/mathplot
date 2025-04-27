@@ -5,8 +5,9 @@ import numpy as np
 import time
 import gc
 from mathutils import Vector, Matrix
-from mathplot.mathplot.utils import progress
+from mathplot.utils import progress
 
+from typing import Callable, List, Optional
 # ----------------------------------------
 # Object Management Optimization
 # ----------------------------------------

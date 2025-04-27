@@ -1,7 +1,7 @@
 # utils/collections.py - Collection utilities for Math Playground
 
 import bpy
-from mathplot.mathplot.utils import progress
+from mathplot.utils import progress
 
 # ----------------------------------------
 # Collection Management Functions

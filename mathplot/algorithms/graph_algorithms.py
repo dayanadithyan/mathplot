@@ -74,12 +74,16 @@ def minimum_spanning_tree_kruskal(graph):
     parent = {node: node for node in graph}
     
     def find(x):
-        if parent[x] != x:
+            """find function.
+    """
+    if parent[x] != x:
             parent[x] = find(parent[x])
         return parent[x]
     
     def union(x, y):
-        parent[find(x)] = find(y)
+            """union function.
+    """
+    parent[find(x)] = find(y)
     
     # Run Kruskal's algorithm
     mst_edges = []
@@ -138,7 +142,9 @@ def detect_cycles(graph):
     cycles = []
     
     def dfs(node, current_path):
-        visited.add(node)
+            """dfs function.
+    """
+    visited.add(node)
         current_path.add(node)
         
         for neighbor, _ in graph[node]:

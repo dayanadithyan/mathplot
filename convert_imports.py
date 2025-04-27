@@ -117,6 +117,8 @@ def process_file(file_path):
     return changes_made
 
 def main():
+        """main function.
+    """
     # Find all Python files in the current directory and subdirectories
     python_files = list(Path('.').glob('**/*.py'))
     

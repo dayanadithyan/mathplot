@@ -52,7 +52,13 @@ class MATH_OT_GeneratePrimes(Operator):
     )
     
     def execute(self, context):
-        # Create primes collection if it doesn't exist
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    # Create primes collection if it doesn't exist
         collection = get_collection("Math_NumberTheory/Math_Primes")
         
         # Clear existing primes
@@ -65,7 +71,11 @@ class MATH_OT_GeneratePrimes(Operator):
             
             # Define a progress callback
             def progress_cb(prog, msg):
-                progress.report_progress(context, prog, msg)
+                    """progress_cb function.
+    """
+        """progress_cb function.
+    """
+    progress.report_progress(context, prog, msg)
                 return True  # Continue processing
             
             primes = generate_primes(self.limit, progress_cb)
@@ -271,7 +281,11 @@ class MATH_OT_GeneratePrimes(Operator):
             collection.objects.link(text)
     
     def invoke(self, context, event):
-        # Initialize with current settings
+            """invoke function.
+    """
+        """invoke function.
+    """
+    # Initialize with current settings
         self.limit = context.scene.math_playground.number_theory.prime_limit
         return self.execute(context)
 
@@ -333,7 +347,13 @@ class MATH_OT_GenerateSequence(Operator):
     )
     
     def execute(self, context):
-        # Create sequence collection if it doesn't exist
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    # Create sequence collection if it doesn't exist
         collection = get_collection("Math_NumberTheory/Math_Sequences")
         
         # Clear existing sequence
@@ -345,7 +365,11 @@ class MATH_OT_GenerateSequence(Operator):
             
             # Define a progress callback
             def progress_cb(prog, msg):
-                progress.report_progress(context, prog, msg)
+                    """progress_cb function.
+    """
+        """progress_cb function.
+    """
+    progress.report_progress(context, prog, msg)
                 return True  # Continue processing
             
             sequence = generate_sequence(
@@ -415,7 +439,11 @@ class MATH_OT_GenerateSequence(Operator):
             return {'CANCELLED'}
     
     def invoke(self, context, event):
-        # Initialize with current settings from scene properties
+            """invoke function.
+    """
+        """invoke function.
+    """
+    # Initialize with current settings from scene properties
         props = context.scene.math_playground.number_theory
         self.sequence_type = props.sequence_type
         self.length = props.sequence_length
@@ -429,7 +457,13 @@ class MATH_OT_ClearNumberTheory(Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        clear_collection("Math_NumberTheory/Math_Primes")
+            """execute function.
+    """
+        """execute function.
+    """
+        """execute function.
+    """
+    clear_collection("Math_NumberTheory/Math_Primes")
         clear_collection("Math_NumberTheory/Math_Sequences")
         self.report({'INFO'}, "All number theory objects cleared")
         return {'FINISHED'}

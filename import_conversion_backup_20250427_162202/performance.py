@@ -7,6 +7,7 @@ import gc
 from mathutils import Vector, Matrix
 from . import progress
 
+from typing import Callable, List, Optional
 # ----------------------------------------
 # Object Management Optimization
 # ----------------------------------------

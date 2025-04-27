@@ -1,10 +1,10 @@
 # operators/__init__.py - Operators module initialization
 
-from mathplot.mathplot.operators import linear_algebra
-from mathplot.mathplot.operators import number_theory
-from mathplot.mathplot.operators import analysis
-from mathplot.mathplot.operators import graph_theory
-from mathplot.mathplot.operators import common
+from mathplot.operators import linear_algebra
+from mathplot.operators import number_theory
+from mathplot.operators import analysis
+from mathplot.operators import graph_theory
+from mathplot.operators import common
 
 def register():
     """Register all operator modules"""

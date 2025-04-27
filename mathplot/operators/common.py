@@ -11,7 +11,9 @@ class MATH_OT_ClearAll(Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        # Clear all math module collections
+            """execute function.
+    """
+    # Clear all math module collections
         clear_module_collections()
         
         self.report({'INFO'}, "All math objects cleared")
