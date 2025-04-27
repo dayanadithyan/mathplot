@@ -11,523 +11,376 @@ from . import progress
 # Object Management Optimization
 # ----------------------------------------
 
-def batch_create_objects(object_data, collection=None, link_to_scene=True, progress_callback=None):
-    """Create multiple objects in a batch for better performance.
-    
-    Args:
-        object_data (list): List of dictionaries with object creation parameters
-                           Each dict should have 'type', 'name', and other type-specific parameters
-        collection (bpy.types.Collection, optional): Collection to add objects to
-        link_to_scene (bool): Whether to link objects to the scene
-        progress_callback (callable, optional): Function to report progress
-        
-    Returns:
-        list: List of created objects
-    """
-    # Start timer for performance measurement
-    start_time = time.time()
-    
-    # Determine target collection
-    if collection is None:
-        if link_to_scene:
-            collection = bpy.context.scene.collection
-    
-    # Disable viewport updates for performance
-    view_layer = bpy.context.view_layer
-    old_hide_viewport = view_layer.hide_viewport
-    view_layer.hide_viewport = True
-    
-    # Prepare objects list
-    objects = []
-    
-    # Process in batches of 100 to avoid memory issues
-    batch_size = 100
-    total_objects = len(object_data)
-    
-    for batch_idx in range(0, total_objects, batch_size):
-        end_idx = min(batch_idx + batch_size, total_objects)
-        batch = object_data[batch_idx:end_idx]
-        
-        # Create all objects in batch
-        for i, data in enumerate(batch):
-            # Report progress
-            if progress_callback:
-                overall_progress = (batch_idx + i) / total_objects
-                if not progress_callback(overall_progress, f"Creating object {batch_idx + i + 1}/{total_objects}"):
-                    # Restore viewport state
-                    view_layer.hide_viewport = old_hide_viewport
-                    return objects  # Return what we have so far
-            
-            # Get object type and name
-            obj_type = data.get('type', 'MESH')
-            obj_name = data.get('name', f"Object_{batch_idx + i}")
-            
-            # Create data block based on type
-            if obj_type == 'MESH':
-                mesh_data = data.get('mesh_data')
-                
-                # Create a new mesh or use provided one
-                if mesh_data is None:
-                    mesh = bpy.data.meshes.new(f"{obj_name}_Mesh")
-                    
-                    # Create mesh from vertices, edges, faces if provided
-                    verts = data.get('vertices', [])
-                    edges = data.get('edges', [])
-                    faces = data.get('faces', [])
-                    
-                    if verts:
-                        mesh.from_pydata(verts, edges, faces)
-                        mesh.update()
-                else:
-                    mesh = mesh_data
-                
-                # Create object
-                obj = bpy.data.objects.new(obj_name, mesh)
-                
-            elif obj_type == 'CURVE':
-                curve_data = data.get('curve_data')
-                
-                if curve_data is None:
-                    curve = bpy.data.curves.new(f"{obj_name}_Curve", 'CURVE')
-                    curve.dimensions = data.get('dimensions', '3D')
-                    curve.resolution_u = data.get('resolution', 12)
-                    curve.bevel_depth = data.get('bevel_depth', 0.0)
-                    curve.bevel_resolution = data.get('bevel_resolution', 0)
-                    curve.fill_mode = data.get('fill_mode', 'FULL')
-                    
-                    # Add spline points if provided
-                    points = data.get('points', [])
-                    if points:
-                        spline = curve.splines.new('POLY')
-                        spline.points.add(len(points) - 1)
-                        for j, point in enumerate(points):
-                            spline.points[j].co = (*point, 1)
-                else:
-                    curve = curve_data
-                
-                # Create object
-                obj = bpy.data.objects.new(obj_name, curve)
-                
-            elif obj_type == 'EMPTY':
-                obj = bpy.data.objects.new(obj_name, None)
-                obj.empty_display_type = data.get('empty_display_type', 'PLAIN_AXES')
-                obj.empty_display_size = data.get('empty_display_size', 1.0)
-                
-            else:
-                # Unsupported type, skip
-                continue
-            
-            # Set common object properties
-            if 'location' in data:
-                obj.location = data['location']
-            
-            if 'rotation' in data:
-                if isinstance(data['rotation'], (tuple, list)):
-                    obj.rotation_euler = data['rotation']
-                elif isinstance(data['rotation'], Matrix):
-                    obj.matrix_world = data['rotation']
-            
-            if 'scale' in data:
-                obj.scale = data['scale']
-            
-            # Set custom properties
-            custom_props = data.get('custom_properties', {})
-            for prop_name, prop_value in custom_props.items():
-                obj[prop_name] = prop_value
-            
-            # Link object to collection
-            if collection:
-                collection.objects.link(obj)
-            elif link_to_scene:
-                bpy.context.scene.collection.objects.link(obj)
-            
-            # Add object to list
-            objects.append(obj)
-    
-    # Restore viewport state
-    view_layer.hide_viewport = old_hide_viewport
-    
-    # Run garbage collection to free memory
-    gc.collect()
-    
-    # Log performance
-    duration = time.time() - start_time
-    print(f"Batch created {len(objects)} objects in {duration:.2f} seconds")
-    
-    return objects
+# mathplot/utils/performance.py (continued from previous implementation)
 
-def instancing_create_objects(template_data, instance_data, collection=None, progress_callback=None):
-    """Create objects using instancing for better performance.
+# ----------------------------------------
+# Batch Processing for Common Operations
+# ----------------------------------------
+
+def batch_create_curve(points_list: List[List[Vector]], 
+                     curve_type: str = 'POLY',
+                     thickness: float = 0.01,
+                     resolution: int = 4,
+                     materials: List = None,
+                     collection: Optional[bpy.types.Collection] = None,
+                     progress_callback: Optional[Callable[[float, str], bool]] = None) -> List[bpy.types.Object]:
+    """Create multiple curve objects in a batch operation.
     
     Args:
-        template_data (dict): Dictionary with template object creation parameters
-        instance_data (list): List of dictionaries with instance parameters (location, rotation, scale)
-        collection (bpy.types.Collection, optional): Collection to add objects to
-        progress_callback (callable, optional): Function to report progress
-        
+        points_list: List of point sets, each defining a curve
+        curve_type: Type of curve ('POLY', 'BEZIER', 'NURBS')
+        thickness: Curve thickness (bevel depth)
+        resolution: Bevel resolution
+        materials: List of materials to apply to curves (can be None or shorter than points_list)
+        collection: Collection to link objects to
+        progress_callback: Callback function for progress reporting
+    
     Returns:
-        tuple: (template_object, list of instance objects)
+        List of created curve objects
     """
-    # Start timer for performance measurement
-    start_time = time.time()
+    curve_objects = []
     
-    # Create template object first
-    template_objects = batch_create_objects([template_data], collection, True, None)
-    if not template_objects:
-        return None, []
+    for i, points in enumerate(points_list):
+        # Report progress
+        if progress_callback:
+            progress = (i + 1) / len(points_list)
+            if not progress_callback(progress, f"Creating curve {i+1}/{len(points_list)}"):
+                break
+        
+        # Create curve data
+        curve_data = bpy.data.curves.new(f'Curve_{i}', 'CURVE')
+        curve_data.dimensions = '3D'
+        
+        # Set curve properties
+        curve_data.bevel_depth = thickness
+        curve_data.bevel_resolution = resolution
+        curve_data.use_fill_caps = True
+        
+        # Create spline
+        spline = curve_data.splines.new(curve_type)
+        
+        # Set points
+        if curve_type == 'BEZIER':
+            # Bezier curve requires special handling
+            spline.bezier_points.add(len(points) - 1)
+            for j, point in enumerate(points):
+                spline.bezier_points[j].co = point
+                spline.bezier_points[j].handle_left_type = 'AUTO'
+                spline.bezier_points[j].handle_right_type = 'AUTO'
+        else:
+            # POLY or NURBS curve
+            spline.points.add(len(points) - 1)
+            for j, point in enumerate(points):
+                spline.points[j].co = (*point, 1)  # Add w=1 for homogeneous coordinates
+        
+        # Create curve object
+        curve_obj = bpy.data.objects.new(f"Curve_{i}", curve_data)
+        
+        # Apply material if available
+        if materials and i < len(materials) and materials[i]:
+            curve_obj.data.materials.append(materials[i])
+        
+        # Link to collection
+        if collection:
+            collection.objects.link(curve_obj)
+        else:
+            bpy.context.scene.collection.objects.link(curve_obj)
+        
+        curve_objects.append(curve_obj)
     
-    template_obj = template_objects[0]
-    instances = []
+    return curve_objects
+
+def batch_create_arrows(origins: List[Vector], 
+                      directions: List[Vector],
+                      length_scale: float = 1.0,
+                      shaft_radius: float = 0.05,
+                      head_radius: float = 0.1,
+                      head_length: float = 0.2,
+                      materials: List = None,
+                      collection: Optional[bpy.types.Collection] = None,
+                      progress_callback: Optional[Callable[[float, str], bool]] = None) -> List[bpy.types.Object]:
+    """Create multiple arrow objects in a batch operation.
     
-    # Create instance data for batch creation
-    instance_object_data = []
-    for i, data in enumerate(instance_data):
-        # Basic instance data
-        instance = {
-            'type': 'EMPTY',
-            'name': f"{template_obj.name}_Instance_{i}",
-            'empty_display_type': 'PLAIN_AXES',
-            'empty_display_size': 0.1,
-            'custom_properties': {'instance_source': template_obj.name}
+    Args:
+        origins: List of origin points
+        directions: List of direction vectors
+        length_scale: Scale factor for arrow length
+        shaft_radius: Radius of the arrow shaft
+        head_radius: Radius of the arrow head
+        head_length: Length of the arrow head as a fraction of total length
+        materials: List of materials to apply (can be None or shorter than origins)
+        collection: Collection to link objects to
+        progress_callback: Callback function for progress reporting
+    
+    Returns:
+        List of created arrow objects (parent objects containing shaft and head)
+    """
+    if len(origins) != len(directions):
+        raise ValueError("Origins and directions lists must have the same length")
+    
+    arrow_objects = []
+    
+    for i, (origin, direction) in enumerate(zip(origins, directions)):
+        # Report progress
+        if progress_callback:
+            progress = (i + 1) / len(origins)
+            if not progress_callback(progress, f"Creating arrow {i+1}/{len(origins)}"):
+                break
+        
+        # Create normalized direction and compute length
+        direction_vec = Vector(direction)
+        length = direction_vec.length * length_scale
+        
+        if length < 0.0001:  # Skip if direction is too small
+            continue
+            
+        direction_vec.normalize()
+        
+        # Create parent empty
+        arrow_obj = bpy.data.objects.new(f"Arrow_{i}", None)
+        arrow_obj.location = origin
+        
+        # Create shaft cylinder
+        shaft_length = length * (1 - head_length)
+        shaft_mesh = create_cylinder_mesh(
+            shaft_radius, 
+            shaft_length, 
+            vertices=12, 
+            cap_ends=True
+        )
+        shaft_obj = bpy.data.objects.new(f"Arrow_Shaft_{i}", shaft_mesh)
+        
+        # Position shaft
+        shaft_obj.parent = arrow_obj
+        shaft_obj.matrix_parent_inverse = Matrix.Identity(4)
+        shaft_obj.location = Vector((0, 0, shaft_length / 2))
+        
+        # Create head cone
+        head_mesh = create_cone_mesh(
+            head_radius,
+            length * head_length,
+            vertices=12
+        )
+        head_obj = bpy.data.objects.new(f"Arrow_Head_{i}", head_mesh)
+        
+        # Position head
+        head_obj.parent = arrow_obj
+        head_obj.matrix_parent_inverse = Matrix.Identity(4)
+        head_obj.location = Vector((0, 0, shaft_length + (length * head_length / 2)))
+        
+        # Orient arrow to direction
+        z_axis = Vector((0, 0, 1))
+        if direction_vec != z_axis and direction_vec != -z_axis:
+            # Calculate rotation to align with direction
+            rotation_axis = z_axis.cross(direction_vec)
+            rotation_axis.normalize()
+            angle = z_axis.angle(direction_vec)
+            arrow_obj.rotation_euler = rotation_axis.to_track_quat('Z', 'Y').to_euler()
+        elif direction_vec == -z_axis:
+            # Handle special case: direction is -Z
+            arrow_obj.rotation_euler = (math.pi, 0, 0)
+        
+        # Apply material if available
+        material = None
+        if materials and i < len(materials):
+            material = materials[i]
+        
+        if material:
+            if shaft_obj.data.materials:
+                shaft_obj.data.materials[0] = material
+            else:
+                shaft_obj.data.materials.append(material)
+                
+            if head_obj.data.materials:
+                head_obj.data.materials[0] = material
+            else:
+                head_obj.data.materials.append(material)
+        
+        # Link to collection
+        if collection:
+            collection.objects.link(arrow_obj)
+            collection.objects.link(shaft_obj)
+            collection.objects.link(head_obj)
+        else:
+            bpy.context.scene.collection.objects.link(arrow_obj)
+            bpy.context.scene.collection.objects.link(shaft_obj)
+            bpy.context.scene.collection.objects.link(head_obj)
+        
+        arrow_objects.append(arrow_obj)
+    
+    return arrow_objects
+
+def batch_visualize_points(points: List[Vector],
+                         radius: float = 0.05,
+                         materials: List = None,
+                         collection: Optional[bpy.types.Collection] = None,
+                         progress_callback: Optional[Callable[[float, str], bool]] = None,
+                         use_instancing: bool = True) -> List[bpy.types.Object]:
+    """Create multiple sphere objects to visualize points.
+    
+    Args:
+        points: List of point positions
+        radius: Sphere radius
+        materials: List of materials to apply (can be None or shorter than points)
+        collection: Collection to link objects to
+        progress_callback: Callback function for progress reporting
+        use_instancing: Whether to use instancing for better performance
+    
+    Returns:
+        List of created sphere objects
+    """
+    if not points:
+        return []
+    
+    if use_instancing:
+        # Create template sphere
+        template_material = None
+        if materials and len(materials) > 0:
+            template_material = materials[0]
+        
+        template_data = {
+            'type': 'MESH',
+            'name': "Point_Template",
+            'mesh_data': create_uv_sphere_mesh(radius, 12, 8),
+            'material': template_material
         }
         
-        # Add transform data
-        if 'location' in data:
-            instance['location'] = data['location']
-        if 'rotation' in data:
-            instance['rotation'] = data['rotation']
-        if 'scale' in data:
-            instance['scale'] = data['scale']
+        # Create instance data
+        instance_data = []
+        for i, point in enumerate(points):
+            material = None
+            if materials and i < len(materials):
+                material = materials[i]
+                
+            instance_data.append({
+                'name': f"Point_{i}",
+                'location': point,
+                'material': material
+            })
         
-        # Add any additional custom properties
-        if 'custom_properties' in data:
-            instance['custom_properties'].update(data['custom_properties'])
+        # Create all instances
+        template, instances = instancing_create_objects(
+            template_data, instance_data, collection, progress_callback)
         
-        instance_object_data.append(instance)
-    
-    # Create all instance objects in batch
-    instance_objs = batch_create_objects(instance_object_data, collection, True, progress_callback)
-    
-    # Set up instancing/duplication
-    for inst_obj in instance_objs:
-        # Set instancing type
-        inst_obj.instance_type = 'OBJECT'
-        
-        # Set the instance collection
-        inst_obj.instance_object = template_obj
-        
-        instances.append(inst_obj)
-    
-    # Log performance
-    duration = time.time() - start_time
-    print(f"Created {len(instances)} instances in {duration:.2f} seconds")
-    
-    return template_obj, instances
-
-def batch_create_vertices_faces(verts, faces, name="BatchMesh", collection=None):
-    """Efficiently create a mesh from a large number of vertices and faces.
-    
-    Args:
-        verts (list): List of vertex coordinates as (x, y, z)
-        faces (list): List of face indices
-        name (str): Name for the new mesh and object
-        collection (bpy.types.Collection, optional): Collection to add the object to
-        
-    Returns:
-        bpy.types.Object: Created mesh object
-    """
-    # Start timer for performance measurement
-    start_time = time.time()
-    
-    # Create mesh datablock
-    mesh = bpy.data.meshes.new(f"{name}_Mesh")
-    
-    # Create mesh from vertices and faces
-    mesh.from_pydata(verts, [], faces)
-    
-    # Calculate normals
-    mesh.calc_normals()
-    
-    # Create object
-    obj = bpy.data.objects.new(name, mesh)
-    
-    # Link to collection or scene
-    if collection:
-        collection.objects.link(obj)
+        return instances
     else:
-        bpy.context.scene.collection.objects.link(obj)
-    
-    # Log performance
-    num_verts = len(verts)
-    num_faces = len(faces)
-    duration = time.time() - start_time
-    print(f"Created mesh with {num_verts} vertices and {num_faces} faces in {duration:.2f} seconds")
-    
-    return obj
+        # Create individual sphere objects
+        object_data = []
+        for i, point in enumerate(points):
+            material = None
+            if materials and i < len(materials):
+                material = materials[i]
+                
+            object_data.append({
+                'type': 'MESH',
+                'name': f"Point_{i}",
+                'mesh_data': create_uv_sphere_mesh(radius, 12, 8),
+                'location': point,
+                'material': material
+            })
+        
+        # Create all spheres
+        return batch_create_objects(object_data, collection, True, progress_callback)
 
-def optimize_mesh(obj, merge_distance=0.0001, remove_doubles=True):
-    """Optimize a mesh by removing doubles, recalculating normals, etc.
+# ----------------------------------------
+# Level of Detail (LOD) Management
+# ----------------------------------------
+
+def create_lod_system(base_obj: bpy.types.Object, 
+                    lod_levels: int = 3, 
+                    distance_thresholds: List[float] = None) -> List[bpy.types.Object]:
+    """Create a complete level of detail system for an object.
     
     Args:
-        obj (bpy.types.Object): Object to optimize
-        merge_distance (float): Distance for merging vertices
-        remove_doubles (bool): Whether to remove duplicate vertices
-        
-    Returns:
-        bool: Success state
-    """
-    if not obj or obj.type != 'MESH':
-        return False
-    
-    # Store current active object and mode
-    old_active = bpy.context.view_layer.objects.active
-    old_mode = None
-    if old_active:
-        old_mode = old_active.mode
-    
-    # Make target object active
-    bpy.context.view_layer.objects.active = obj
-    
-    # Enter edit mode
-    if obj.mode != 'EDIT':
-        bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Select all
-    bpy.ops.mesh.select_all(action='SELECT')
-    
-    # Remove doubles if requested
-    if remove_doubles:
-        bpy.ops.mesh.remove_doubles(threshold=merge_distance)
-    
-    # Recalculate normals
-    bpy.ops.mesh.normals_make_consistent(inside=False)
-    
-    # Return to object mode
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    # Update mesh
-    obj.data.update()
-    
-    # Restore previous active object and mode
-    if old_active:
-        bpy.context.view_layer.objects.active = old_active
-        if old_mode and old_mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode=old_mode)
-    
-    return True
-
-# ----------------------------------------
-# Batch Processing Optimization
-# ----------------------------------------
-
-def batch_process_objects(objects, process_func, batch_size=10, progress_callback=None):
-    """Process a batch of objects efficiently.
-    
-    Args:
-        objects (list): List of objects to process
-        process_func (callable): Function to process each object
-        batch_size (int): Number of objects to process in each batch
-        progress_callback (callable, optional): Function to report progress
-        
-    Returns:
-        list: Results from processing each object
-    """
-    results = []
-    total_objects = len(objects)
-    
-    # Process in batches
-    for i in range(0, total_objects, batch_size):
-        end_idx = min(i + batch_size, total_objects)
-        batch = objects[i:end_idx]
-        
-        # Process batch
-        batch_results = []
-        for j, obj in enumerate(batch):
-            # Report progress
-            if progress_callback:
-                overall_progress = (i + j) / total_objects
-                if not progress_callback(overall_progress, f"Processing object {i + j + 1}/{total_objects}"):
-                    return results  # Return what we have so far
-            
-            # Process object
-            result = process_func(obj)
-            batch_results.append(result)
-        
-        # Extend results
-        results.extend(batch_results)
-        
-        # Run garbage collection between batches
-        gc.collect()
-    
-    return results
-
-# ----------------------------------------
-# Memory Management
-# ----------------------------------------
-
-def clear_orphaned_data():
-    """Clear orphaned data blocks to free memory."""
-    # Remove orphaned meshes
-    for mesh in bpy.data.meshes:
-        if mesh.users == 0:
-            bpy.data.meshes.remove(mesh)
-    
-    # Remove orphaned materials
-    for material in bpy.data.materials:
-        if material.users == 0:
-            bpy.data.materials.remove(material)
-    
-    # Remove orphaned textures
-    for texture in bpy.data.textures:
-        if texture.users == 0:
-            bpy.data.textures.remove(texture)
-    
-    # Remove orphaned images
-    for image in bpy.data.images:
-        if image.users == 0:
-            bpy.data.images.remove(image)
-    
-    # Force garbage collection
-    gc.collect()
-
-def measure_memory_usage():
-    """Measure the memory usage of Blender data blocks.
+        base_obj: The high-detail base object
+        lod_levels: Number of LOD levels to create
+        distance_thresholds: Distance thresholds for each LOD level
     
     Returns:
-        dict: Dictionary with memory usage information
+        List of LOD objects from highest to lowest detail
     """
-    memory_usage = {
-        'meshes': len(bpy.data.meshes),
-        'objects': len(bpy.data.objects),
-        'materials': len(bpy.data.materials),
-        'textures': len(bpy.data.textures),
-        'images': len(bpy.data.images),
-    }
-    
-    return memory_usage
-
-# ----------------------------------------
-# Level of Detail System
-# ----------------------------------------
-
-def create_lod_mesh(obj, lod_level=1, target_reduction=0.5):
-    """Create a lower level of detail version of a mesh.
-    
-    Args:
-        obj (bpy.types.Object): Original object
-        lod_level (int): Level of detail (higher means lower detail)
-        target_reduction (float): Target reduction ratio (0.0-1.0)
-        
-    Returns:
-        bpy.types.Object: New object with reduced detail
-    """
-    if not obj or obj.type != 'MESH':
-        return None
-    
-    # Create a copy of the original mesh
-    lod_mesh = obj.data.copy()
-    lod_mesh.name = f"{obj.data.name}_LOD{lod_level}"
-    
-    # Create new object
-    lod_obj = obj.copy()
-    lod_obj.data = lod_mesh
-    lod_obj.name = f"{obj.name}_LOD{lod_level}"
-    
-    # Link to same collections
-    for collection in obj.users_collection:
-        collection.objects.link(lod_obj)
-    
-    # Store current active object
-    old_active = bpy.context.view_layer.objects.active
-    
-    # Make LOD object active
-    bpy.context.view_layer.objects.active = lod_obj
-    
-    # Enter edit mode
-    bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Select all
-    bpy.ops.mesh.select_all(action='SELECT')
-    
-    # Decimate mesh based on LOD level
-    detail_ratio = max(0.01, 1.0 - (target_reduction * lod_level))
-    bpy.ops.mesh.decimate(ratio=detail_ratio)
-    
-    # Return to object mode
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    # Restore previous active object
-    if old_active:
-        bpy.context.view_layer.objects.active = old_active
-    
-    # Hide the LOD object initially
-    lod_obj.hide_viewport = True
-    lod_obj.hide_render = True
-    
-    # Store LOD level as custom property
-    lod_obj["lod_level"] = lod_level
-    lod_obj["original_object"] = obj.name
-    
-    return lod_obj
-
-def manage_lod_visibility(camera, lod_objects, distance_thresholds=None):
-    """Manage the visibility of LOD objects based on distance from camera.
-    
-    Args:
-        camera (bpy.types.Object): Camera object
-        lod_objects (dict): Dictionary mapping original objects to lists of LOD objects
-        distance_thresholds (list, optional): Distance thresholds for LOD levels
-        
-    Returns:
-        None
-    """
-    if not camera or camera.type != 'CAMERA':
-        return
+    if not base_obj or base_obj.type != 'MESH':
+        return []
     
     # Default distance thresholds if not provided
-    if distance_thresholds is None:
-        distance_thresholds = [10.0, 30.0, 60.0]  # [LOD1, LOD2, LOD3, ...]
+    if not distance_thresholds:
+        distance_thresholds = [10.0 * (i + 1) for i in range(lod_levels - 1)]
     
-    # Get camera position
-    cam_pos = camera.matrix_world.translation
+    # Ensure we have the right number of thresholds
+    if len(distance_thresholds) != lod_levels - 1:
+        distance_thresholds = distance_thresholds[:lod_levels-1]
+        while len(distance_thresholds) < lod_levels - 1:
+            last = distance_thresholds[-1] if distance_thresholds else 10.0
+            distance_thresholds.append(last + 10.0)
     
-    # Check each original object
-    for orig_obj, lod_objs in lod_objects.items():
-        if not orig_obj:
+    # Create LOD objects
+    lod_objects = [base_obj]  # LOD0 is the original object
+    
+    for i in range(1, lod_levels):
+        # Target reduction increases with LOD level
+        target_reduction = 0.3 + (i - 1) * 0.2  # 30%, 50%, 70%, etc.
+        target_reduction = min(target_reduction, 0.9)  # Cap at 90% reduction
+        
+        # Create LOD mesh
+        lod_obj = create_lod_mesh(base_obj, i, target_reduction)
+        if lod_obj:
+            # Store distance threshold as custom property
+            lod_obj["lod_distance"] = distance_thresholds[i-1]
+            lod_objects.append(lod_obj)
+    
+    return lod_objects
+
+def setup_lod_drivers(lod_objects: List[bpy.types.Object], camera_obj: bpy.types.Object) -> None:
+    """Set up drivers to control visibility based on distance from camera.
+    
+    Args:
+        lod_objects: List of LOD objects from highest to lowest detail
+        camera_obj: Camera object to measure distance from
+    """
+    if not lod_objects or len(lod_objects) < 2 or not camera_obj:
+        return
+    
+    for i, obj in enumerate(lod_objects):
+        # Skip if not a valid object
+        if not obj:
             continue
-        
-        # Calculate distance to camera
-        obj_pos = orig_obj.matrix_world.translation
-        distance = (obj_pos - cam_pos).length
-        
-        # Determine which LOD to show based on distance
-        show_lod = -1  # -1 means show original
-        
-        for i, threshold in enumerate(distance_thresholds):
-            if distance >= threshold:
-                show_lod = i
-        
-        # Show/hide objects based on LOD level
-        orig_obj.hide_viewport = (show_lod >= 0)
-        orig_obj.hide_render = (show_lod >= 0)
-        
-        for i, lod_obj in enumerate(lod_objs):
-            if not lod_obj:
-                continue
             
-            lod_obj.hide_viewport = (show_lod != i)
-            lod_obj.hide_render = (show_lod != i)
-
-# ----------------------------------------
-# Registration
-# ----------------------------------------
-
-def register():
-    """Register performance utilities"""
-    print("Math Playground: Performance utilities registered")
-
-def unregister():
-    """Unregister performance utilities"""
-    # Clean up orphaned data on unregister
-    clear_orphaned_data()
-    print("Math Playground: Performance utilities unregistered")
+        # Get distance threshold
+        if i == 0:  # Base object (LOD0)
+            min_dist = 0.0
+            max_dist = obj.get("lod_distance", 10.0)
+        elif i == len(lod_objects) - 1:  # Lowest detail
+            min_dist = lod_objects[i-1].get("lod_distance", (i-1) * 10.0)
+            max_dist = float('inf')
+        else:  # Middle LODs
+            min_dist = lod_objects[i-1].get("lod_distance", (i-1) * 10.0)
+            max_dist = obj.get("lod_distance", i * 10.0)
+        
+        # Set up driver for visibility
+        driver = obj.driver_add("hide_viewport").driver
+        driver.type = 'SCRIPTED'
+        
+        # Add variable for distance to camera
+        var = driver.variables.new()
+        var.name = 'dist'
+        var.type = 'LOC_DIFF'
+        var.targets[0].id = obj
+        var.targets[1].id = camera_obj
+        
+        # Set up expression
+        if i == 0:  # Base object (highest detail)
+            driver.expression = f"dist > {max_dist}"
+        elif i == len(lod_objects) - 1:  # Lowest detail
+            driver.expression = f"dist < {min_dist}"
+        else:  # Middle LODs
+            driver.expression = f"dist < {min_dist} or dist > {max_dist}"
+        
+        # Also drive render visibility
+        render_driver = obj.driver_add("hide_render").driver
+        render_driver.type = 'SCRIPTED'
+        render_var = render_driver.variables.new()
+        render_var.name = 'dist'
+        render_var.type = 'LOC_DIFF'
+        render_var.targets[0].id = obj
+        render_var.targets[1].id = camera_obj
+        render_driver.expression = driver.expression
