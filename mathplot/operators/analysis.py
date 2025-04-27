@@ -5,7 +5,11 @@ import math
 import numpy as np
 from bpy.types import Operator
 from mathutils import Vector
-from mathplot.utils.collections import CollectionHelpers
+
+from ..utils import materials, progress
+from ..utils.collections import get_collection, clear_collection
+from ..utils.math_utils import evaluate_expression
+
 class MATH_OT_PlotFunction(Operator):
     """Plot a function y=f(x)"""
     bl_idname = "math.plot_function"
@@ -86,13 +90,13 @@ class MATH_OT_PlotFunction(Operator):
     
     def execute(self, context):
         # Create function collection if it doesn't exist
-        collection = collections.get_collection("Math_Analysis/Math_Functions")
+        collection = get_collection("Math_Analysis/Math_Functions")
         
         # Create material for function
         func_material = materials.create_material(f"Function_Material", self.color)
         
         try:
-            progress.report_progress(context, 0.0, "Starting function plot...")
+            progress.start_progress(context, "Starting function plot...")
             
             if self.plot_type == 'CURVE':
                 self.plot_curve(context, func_material, collection)
@@ -121,7 +125,7 @@ class MATH_OT_PlotFunction(Operator):
                                    f"Evaluating function: point {i+1}/{len(x_range)}")
             
             try:
-                y = math_utils.evaluate_expression(self.function, {"x": x})
+                y = evaluate_expression(self.function, {"x": x})
                 # Check for valid result
                 if not np.isnan(y) and not np.isinf(y):
                     points.append((x, 0, y))
@@ -188,7 +192,7 @@ class MATH_OT_PlotFunction(Operator):
                                        f"Evaluating surface: point {point_count}/{total_points}")
                 
                 try:
-                    Z[i, j] = math_utils.evaluate_expression(self.z_function, {"x": X[i, j], "y": Y[i, j]})
+                    Z[i, j] = evaluate_expression(self.z_function, {"x": X[i, j], "y": Y[i, j]})
                     # Check for valid result
                     if np.isnan(Z[i, j]) or np.isinf(Z[i, j]):
                         Z[i, j] = 0
@@ -241,7 +245,7 @@ class MATH_OT_PlotFunction(Operator):
     
     def create_axes(self, is_3d=False):
         """Create coordinate axes"""
-        collection = collections.get_collection("Math_Analysis/Math_Functions")
+        collection = get_collection("Math_Analysis/Math_Functions")
         
         # Create x-axis
         bpy.ops.mesh.primitive_cylinder_add(
@@ -329,9 +333,11 @@ class MATH_OT_PlotFunction(Operator):
     
     def invoke(self, context, event):
         # Initialize with current settings
-        self.function = context.scene.math_playground.analysis.function_expression
-        self.x_min = context.scene.math_playground.analysis.x_min
-        self.x_max = context.scene.math_playground.analysis.x_max
+        props = context.scene.math_playground.analysis
+        self.function = props.function_expression
+        self.x_min = props.x_min
+        self.x_max = props.x_max
+        self.samples = props.samples
         return self.execute(context)
 
 class MATH_OT_PlotParametric(Operator):
@@ -398,13 +404,13 @@ class MATH_OT_PlotParametric(Operator):
     
     def execute(self, context):
         # Create function collection if it doesn't exist
-        collection = collections.get_collection("Math_Analysis/Math_Parametric")
+        collection = get_collection("Math_Analysis/Math_Parametric")
         
         # Create material for function
         func_material = materials.create_material("Parametric_Material", self.color)
         
         try:
-            progress.report_progress(context, 0.0, "Starting parametric curve plot...")
+            progress.start_progress(context, "Starting parametric curve plot...")
             
             # Generate points
             t_range = np.linspace(self.t_min, self.t_max, self.samples)
@@ -417,9 +423,9 @@ class MATH_OT_PlotParametric(Operator):
                                        f"Evaluating curve: point {i+1}/{len(t_range)}")
                 
                 try:
-                    x = math_utils.evaluate_expression(self.x_function, {"t": t})
-                    y = math_utils.evaluate_expression(self.y_function, {"t": t})
-                    z = math_utils.evaluate_expression(self.z_function, {"t": t})
+                    x = evaluate_expression(self.x_function, {"t": t})
+                    y = evaluate_expression(self.y_function, {"t": t})
+                    z = evaluate_expression(self.z_function, {"t": t})
                     
                     # Check for valid results
                     if (not np.isnan(x) and not np.isinf(x) and
@@ -461,7 +467,7 @@ class MATH_OT_PlotParametric(Operator):
             collection.objects.link(curve_obj)
             
             # Apply material
-            materials.apply_material(curve_obj, func_material)
+            materials.apply_material(curve_obj, material)
             
             progress.report_progress(context, 0.9, "Creating coordinate axes...")
             
@@ -479,7 +485,7 @@ class MATH_OT_PlotParametric(Operator):
     
     def create_axes(self):
         """Create coordinate axes"""
-        collection = collections.get_collection("Math_Analysis/Math_Parametric")
+        collection = get_collection("Math_Analysis/Math_Parametric")
         
         # Calculate axis lengths based on the curve extents
         axis_length = 10  # Default length
@@ -651,16 +657,16 @@ class MATH_OT_PlotVectorField(Operator):
     
     def execute(self, context):
         # Create vector field collection if it doesn't exist
-        collection = collections.get_collection("Math_Analysis/Math_VectorFields")
+        collection = get_collection("Math_Analysis/Math_VectorFields")
         
         # Clear existing vector field
-        collections.clear_collection("Math_Analysis/Math_VectorFields")
+        clear_collection("Math_Analysis/Math_VectorFields")
         
         # Create material for vector field
         field_material = materials.create_material("VectorField_Material", self.color)
         
         try:
-            progress.report_progress(context, 0.0, "Starting vector field plot...")
+            progress.start_progress(context, "Starting vector field plot...")
             
             # Generate grid points
             x_range = np.linspace(self.x_min, self.x_max, self.grid_size)
@@ -682,9 +688,9 @@ class MATH_OT_PlotVectorField(Operator):
                         
                         # Evaluate vector components
                         try:
-                            vx = math_utils.evaluate_expression(self.x_component, {"x": x, "y": y, "z": z})
-                            vy = math_utils.evaluate_expression(self.y_component, {"x": x, "y": y, "z": z})
-                            vz = math_utils.evaluate_expression(self.z_component, {"x": x, "y": y, "z": z})
+                            vx = evaluate_expression(self.x_component, {"x": x, "y": y, "z": z})
+                            vy = evaluate_expression(self.y_component, {"x": x, "y": y, "z": z})
+                            vz = evaluate_expression(self.z_component, {"x": x, "y": y, "z": z})
                             
                             # Create a vector
                             vec = Vector((vx, vy, vz))
@@ -794,7 +800,7 @@ class MATH_OT_PlotVectorField(Operator):
     
     def create_axes(self):
         """Create coordinate axes"""
-        collection = collections.get_collection("Math_Analysis/Math_VectorFields")
+        collection = get_collection("Math_Analysis/Math_VectorFields")
         
         axis_length = max(
             abs(self.x_max - self.x_min),
@@ -874,6 +880,14 @@ class MATH_OT_PlotVectorField(Operator):
             if obj.users_collection:
                 obj.users_collection[0].objects.unlink(obj)
             collection.objects.link(obj)
+    
+    def invoke(self, context, event):
+        # Initialize with current settings
+        props = context.scene.math_playground.analysis
+        self.x_component = props.vector_field_x
+        self.y_component = props.vector_field_y
+        self.z_component = props.vector_field_z
+        return self.execute(context)
 
 class MATH_OT_ClearAnalysis(Operator):
     """Clear all analysis objects from the scene"""
@@ -882,9 +896,9 @@ class MATH_OT_ClearAnalysis(Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        collections.clear_collection("Math_Analysis/Math_Functions")
-        collections.clear_collection("Math_Analysis/Math_VectorFields")
-        collections.clear_collection("Math_Analysis/Math_Parametric")
+        clear_collection("Math_Analysis/Math_Functions")
+        clear_collection("Math_Analysis/Math_VectorFields")
+        clear_collection("Math_Analysis/Math_Parametric")
         self.report({'INFO'}, "All analysis objects cleared")
         return {'FINISHED'}
 

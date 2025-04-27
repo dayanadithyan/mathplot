@@ -5,7 +5,11 @@ import math
 import numpy as np
 from bpy.types import Operator
 from mathutils import Vector, Matrix
-from mathplot.utils.collections import CollectionHelpers
+
+from ..utils import materials, progress
+from ..utils.collections import get_collection, clear_collection
+from ..utils.math_utils import parse_matrix
+
 class MATH_OT_AddVector(Operator):
     """Add a vector to the scene"""
     bl_idname = "math.add_vector"
@@ -37,7 +41,7 @@ class MATH_OT_AddVector(Operator):
     
     def execute(self, context):
         # Create vector collection if it doesn't exist
-        collection = collections.get_collection("Math_LinearAlgebra/Math_Vectors")
+        collection = get_collection("Math_LinearAlgebra/Math_Vectors")
         
         # Create vector material
         material = materials.create_material(f"Vector_{self.name}_Material", self.color)
@@ -136,20 +140,11 @@ class MATH_OT_ApplyMatrix(Operator):
     def execute(self, context):
         try:
             # Parse matrix
-            rows = self.matrix_rows.split(';')
-            if len(rows) != 3:
-                self.report({'ERROR'}, "Matrix must have 3 rows")
-                return {'CANCELLED'}
-                
-            matrix_data = []
-            for row in rows:
-                values = row.split(',')
-                if len(values) != 3:
-                    self.report({'ERROR'}, "Each row must have 3 values")
-                    return {'CANCELLED'}
-                matrix_data.append([float(v) for v in values])
+            matrix_data = parse_matrix(self.matrix_rows)
             
-            matrix = Matrix(matrix_data)
+            # Convert to Blender Matrix
+            matrix = Matrix(matrix_data.tolist())
+            
         except ValueError as e:
             self.report({'ERROR'}, f"Invalid matrix value: {e}")
             return {'CANCELLED'}
@@ -158,7 +153,7 @@ class MATH_OT_ApplyMatrix(Operator):
             return {'CANCELLED'}
         
         # Get vector collection
-        collection = collections.get_collection("Math_LinearAlgebra/Math_Vectors")
+        collection = get_collection("Math_LinearAlgebra/Math_Vectors")
         if not collection:
             self.report({'ERROR'}, "No vectors to transform")
             return {'CANCELLED'}
@@ -173,7 +168,7 @@ class MATH_OT_ApplyMatrix(Operator):
             self.report({'ERROR'}, "No vectors to transform")
             return {'CANCELLED'}
         
-        progress.report_progress(context, 0.0, "Starting matrix transformation...")
+        progress.start_progress(context, "Starting matrix transformation...")
         
         # Process each vector
         for i, obj in enumerate(vector_objects):
@@ -223,7 +218,7 @@ class MATH_OT_ClearVectors(Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        collections.clear_collection("Math_LinearAlgebra/Math_Vectors")
+        clear_collection("Math_LinearAlgebra/Math_Vectors")
         self.report({'INFO'}, "All vectors cleared")
         return {'FINISHED'}
 

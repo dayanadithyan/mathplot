@@ -5,7 +5,11 @@ import math
 import random
 import numpy as np
 from bpy.types import Operator
-from mathplot.utils.collections import CollectionHelpers
+
+from ..utils import materials, progress
+from ..utils.collections import get_collection, clear_collection
+from ..utils.math_utils import generate_primes, generate_sequence
+
 class MATH_OT_GeneratePrimes(Operator):
     """Generate prime numbers up to a limit"""
     bl_idname = "math.generate_primes"
@@ -49,15 +53,22 @@ class MATH_OT_GeneratePrimes(Operator):
     
     def execute(self, context):
         # Create primes collection if it doesn't exist
-        collection = collections.get_collection("Math_NumberTheory/Math_Primes")
+        collection = get_collection("Math_NumberTheory/Math_Primes")
         
         # Clear existing primes
-        collections.clear_collection("Math_NumberTheory/Math_Primes")
+        clear_collection("Math_NumberTheory/Math_Primes")
         
         # Generate primes
         try:
+            progress.start_progress(context, f"Generating primes up to {self.limit}...")
             progress.report_progress(context, 0.0, f"Generating primes up to {self.limit}...")
-            primes = math_utils.generate_primes(self.limit)
+            
+            # Define a progress callback
+            def progress_cb(prog, msg):
+                progress.report_progress(context, prog, msg)
+                return True  # Continue processing
+            
+            primes = generate_primes(self.limit, progress_cb)
             
             if not primes:
                 self.report({'WARNING'}, f"No primes found up to {self.limit}")
@@ -323,21 +334,21 @@ class MATH_OT_GenerateSequence(Operator):
     
     def execute(self, context):
         # Create sequence collection if it doesn't exist
-        collection = collections.get_collection("Math_NumberTheory/Math_Sequences")
+        collection = get_collection("Math_NumberTheory/Math_Sequences")
         
         # Clear existing sequence
-        collections.clear_collection("Math_NumberTheory/Math_Sequences")
+        clear_collection("Math_NumberTheory/Math_Sequences")
         
         try:
             # Generate sequence
-            progress.report_progress(context, 0.0, f"Generating {self.sequence_type} sequence...")
+            progress.start_progress(context, f"Generating {self.sequence_type} sequence...")
             
             # Define a progress callback
             def progress_cb(prog, msg):
                 progress.report_progress(context, prog, msg)
                 return True  # Continue processing
             
-            sequence = math_utils.generate_sequence(
+            sequence = generate_sequence(
                 self.sequence_type, 
                 self.length, 
                 self.custom_formula if self.sequence_type == 'CUSTOM' else None,
@@ -404,8 +415,11 @@ class MATH_OT_GenerateSequence(Operator):
             return {'CANCELLED'}
     
     def invoke(self, context, event):
-        # Initialize with current settings
-        self.length = context.scene.math_playground.number_theory.sequence_length
+        # Initialize with current settings from scene properties
+        props = context.scene.math_playground.number_theory
+        self.sequence_type = props.sequence_type
+        self.length = props.sequence_length
+        self.custom_formula = props.custom_formula
         return self.execute(context)
 
 class MATH_OT_ClearNumberTheory(Operator):
@@ -415,8 +429,8 @@ class MATH_OT_ClearNumberTheory(Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        collections.clear_collection("Math_NumberTheory/Math_Primes")
-        collections.clear_collection("Math_NumberTheory/Math_Sequences")
+        clear_collection("Math_NumberTheory/Math_Primes")
+        clear_collection("Math_NumberTheory/Math_Sequences")
         self.report({'INFO'}, "All number theory objects cleared")
         return {'FINISHED'}
 
