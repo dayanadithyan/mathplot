@@ -3,56 +3,128 @@
 import bpy
 import time
 import threading
+import traceback
+from threading import Lock
 from mathutils import Vector
 
 # ----------------------------------------
-# Progress Reporting Functions
+# Thread-safe Progress Reporting
 # ----------------------------------------
 
+# Global lock for progress updates
+_progress_lock = Lock()
+
+# Global state for progress reporting
+_progress_state = {
+    'active': False,
+    'value': 0.0,
+    'message': '',
+    'canceled': False
+}
+
 def report_progress(context, progress, message):
-    """Report progress to the user during long operations.
+    """Report progress to the user during long operations in a thread-safe manner.
     
     Args:
         context (bpy.types.Context): Current context
         progress (float): Progress value between 0.0 and 1.0
         message (str): Progress message to display
+        
+    Returns:
+        bool: False if operation was canceled, True otherwise
     """
     # Ensure progress is in valid range
     progress = max(0.0, min(1.0, progress))
     
-    # Update the window manager progress bar
-    context.window_manager.progress_update(int(progress * 100))
+    # Only report if we have a valid context
+    if context is None:
+        return not _progress_state['canceled']
     
-    # Set status message in the header
-    if hasattr(context, "area") and context.area:
-        if hasattr(context.area, "header_text_set"):
-            context.area.header_text_set(message)
+    # Update progress state in a thread-safe manner
+    with _progress_lock:
+        if not _progress_state['active']:
+            return not _progress_state['canceled']
+            
+        _progress_state['value'] = progress
+        _progress_state['message'] = message
+        
+        # Check if we're in the main thread
+        is_main_thread = threading.current_thread() is threading.main_thread()
+        
+        if is_main_thread:
+            # We can safely update UI from the main thread
+            try:
+                # Update the window manager progress bar
+                context.window_manager.progress_update(int(progress * 100))
+                
+                # Set status message in the header
+                if hasattr(context, "area") and context.area:
+                    if hasattr(context.area, "header_text_set"):
+                        context.area.header_text_set(message)
+            except ReferenceError:
+                # Context might have become invalid
+                pass
     
-    # Force UI update
-    context.window_manager.progress_update(int(progress * 100))
+    # Return cancel state
+    return not _progress_state['canceled']
 
 def start_progress(context, title="Processing..."):
-    """Start progress reporting.
+    """Start progress reporting in a thread-safe manner.
     
     Args:
         context (bpy.types.Context): Current context
         title (str): Title for the progress operation
     """
-    context.window_manager.progress_begin(0, 100)
-    if hasattr(context, "area") and context.area:
-        if hasattr(context.area, "header_text_set"):
-            context.area.header_text_set(title)
+    with _progress_lock:
+        _progress_state['active'] = True
+        _progress_state['value'] = 0.0
+        _progress_state['message'] = title
+        _progress_state['canceled'] = False
+        
+    # Only modify UI from the main thread
+    if threading.current_thread() is threading.main_thread() and context:
+        try:
+            context.window_manager.progress_begin(0, 100)
+            if hasattr(context, "area") and context.area:
+                if hasattr(context.area, "header_text_set"):
+                    context.area.header_text_set(title)
+        except ReferenceError:
+            # Context might have become invalid
+            pass
 
 def end_progress(context):
-    """End progress reporting.
+    """End progress reporting in a thread-safe manner.
     
     Args:
         context (bpy.types.Context): Current context
     """
-    context.window_manager.progress_end()
-    if hasattr(context, "area") and context.area:
-        if hasattr(context.area, "header_text_set"):
-            context.area.header_text_set(None)
+    with _progress_lock:
+        _progress_state['active'] = False
+    
+    # Only modify UI from the main thread
+    if threading.current_thread() is threading.main_thread() and context:
+        try:
+            context.window_manager.progress_end()
+            if hasattr(context, "area") and context.area:
+                if hasattr(context.area, "header_text_set"):
+                    context.area.header_text_set(None)
+        except ReferenceError:
+            # Context might have become invalid
+            pass
+
+def cancel_progress():
+    """Cancel the current progress operation."""
+    with _progress_lock:
+        _progress_state['canceled'] = True
+
+def is_progress_canceled():
+    """Check if the current progress operation was canceled.
+    
+    Returns:
+        bool: True if canceled, False otherwise
+    """
+    with _progress_lock:
+        return _progress_state['canceled']
 
 # ----------------------------------------
 # Advanced Progress Visualization
@@ -70,41 +142,47 @@ class ProgressVisualizer:
             title (str): Title for the progress operation
         """
         self.context = context
-        self.steps = steps
+        self.steps = max(1, steps)
         self.current_step = 0
         self.title = title
         self.start_time = time.time()
         self.indicator_obj = None
+        self._is_canceled = False
         
         # Start progress reporting
         start_progress(context, title)
         
-        # Create progress indicator in 3D view
-        self.create_progress_indicator()
+        # Only create visual indicator from the main thread
+        if threading.current_thread() is threading.main_thread():
+            self._create_progress_indicator()
     
-    def create_progress_indicator(self):
+    def _create_progress_indicator(self):
         """Create a visual progress indicator in the 3D view."""
-        # Create a plane object
-        bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 5))
-        self.indicator_obj = bpy.context.active_object
-        self.indicator_obj.name = "ProgressIndicator"
-        
-        # Create a material
-        material = bpy.data.materials.new("ProgressIndicator_Material")
-        material.diffuse_color = (0.2, 0.6, 1.0, 0.8)
-        
-        # Apply material
-        if self.indicator_obj.data.materials:
-            self.indicator_obj.data.materials[0] = material
-        else:
-            self.indicator_obj.data.materials.append(material)
-        
-        # Make semi-transparent
-        material.blend_method = 'BLEND'
-        
-        # Scale to zero width initially
-        self.indicator_obj.scale.x = 0.01
-        self.indicator_obj.scale.y = 0.1
+        try:
+            # Create a plane object
+            bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 5))
+            self.indicator_obj = bpy.context.active_object
+            self.indicator_obj.name = "ProgressIndicator"
+            
+            # Create a material
+            material = bpy.data.materials.new("ProgressIndicator_Material")
+            material.diffuse_color = (0.2, 0.6, 1.0, 0.8)
+            
+            # Apply material
+            if self.indicator_obj.data.materials:
+                self.indicator_obj.data.materials[0] = material
+            else:
+                self.indicator_obj.data.materials.append(material)
+            
+            # Make semi-transparent
+            material.blend_method = 'BLEND'
+            
+            # Scale to zero width initially
+            self.indicator_obj.scale.x = 0.01
+            self.indicator_obj.scale.y = 0.1
+        except Exception as e:
+            print(f"Error creating progress indicator: {e}")
+            self.indicator_obj = None
     
     def update(self, step, message=None):
         """Update progress.
@@ -112,7 +190,15 @@ class ProgressVisualizer:
         Args:
             step (int): Current step
             message (str, optional): Progress message
+            
+        Returns:
+            bool: False if canceled, True otherwise
         """
+        # Check if canceled
+        if is_progress_canceled():
+            self._is_canceled = True
+            return False
+            
         # Update current step
         self.current_step = min(step, self.steps)
         
@@ -125,20 +211,44 @@ class ProgressVisualizer:
             eta = (elapsed / max(progress, 0.001)) * (1 - progress)
             message = f"{self.title} {progress:.0%} (ETA: {eta:.1f}s)"
         
-        report_progress(self.context, progress, message)
+        # Report progress (thread-safe)
+        if not report_progress(self.context, progress, message):
+            self._is_canceled = True
+            return False
         
-        # Update visual indicator
-        if self.indicator_obj:
-            self.indicator_obj.scale.x = progress
+        # Update visual indicator only from the main thread
+        if threading.current_thread() is threading.main_thread():
+            if self.indicator_obj:
+                try:
+                    self.indicator_obj.scale.x = progress
+                except ReferenceError:
+                    # Object might have been deleted
+                    self.indicator_obj = None
+        
+        return True
     
     def finish(self):
         """Finish progress reporting."""
         end_progress(self.context)
         
-        # Remove visual indicator
-        if self.indicator_obj:
-            bpy.data.objects.remove(self.indicator_obj, do_unlink=True)
-            self.indicator_obj = None
+        # Remove visual indicator only from the main thread
+        if threading.current_thread() is threading.main_thread():
+            if self.indicator_obj:
+                try:
+                    bpy.data.objects.remove(self.indicator_obj, do_unlink=True)
+                except ReferenceError:
+                    # Object might have been deleted already
+                    pass
+                finally:
+                    self.indicator_obj = None
+    
+    def is_canceled(self):
+        """Check if the progress was canceled.
+        
+        Returns:
+            bool: True if canceled, False otherwise
+        """
+        return self._is_canceled or is_progress_canceled()
 
 # ----------------------------------------
 # Threaded Progress Tasks
@@ -168,8 +278,9 @@ class ProgressThread(threading.Thread):
         self.progress = 0.0
         self.message = title
         self.visualizer = None
-        self.cancelled = False
         self.daemon = True  # Thread will be killed when main program exits
+        self._is_finished = False
+        self._lock = threading.RLock()  # Reentrant lock for thread safety
     
     def run(self):
         """Run the thread."""
@@ -185,10 +296,15 @@ class ProgressThread(threading.Thread):
             
         except Exception as e:
             self.error = e
+            self.error_traceback = traceback.format_exc()
+            print(f"Error in progress thread: {e}\n{self.error_traceback}")
         finally:
             # Clean up visualizer
             if self.visualizer:
                 self.visualizer.finish()
+            
+            with self._lock:
+                self._is_finished = True
     
     def update_progress(self, progress, message=None):
         """Update progress from the task function.
@@ -196,23 +312,46 @@ class ProgressThread(threading.Thread):
         Args:
             progress (float): Progress value between 0.0 and 1.0
             message (str, optional): Progress message
+            
+        Returns:
+            bool: False if canceled, True otherwise
         """
-        self.progress = progress
-        if message:
-            self.message = message
-        
-        # Update visualizer
-        if self.visualizer:
-            self.visualizer.update(int(progress * 100), message)
-        
-        # Check if cancelled
-        return not self.cancelled
+        with self._lock:
+            self.progress = progress
+            if message:
+                self.message = message
+            
+            # Update visualizer
+            if self.visualizer and not self.visualizer.update(int(progress * 100), message):
+                return False
+            
+            # Check if canceled
+            return not self.is_canceled()
     
     def cancel(self):
         """Cancel the thread."""
-        self.cancelled = True
+        cancel_progress()
+    
+    def is_canceled(self):
+        """Check if the thread was canceled.
+        
+        Returns:
+            bool: True if canceled, False otherwise
+        """
+        if self.visualizer:
+            return self.visualizer.is_canceled()
+        return is_progress_canceled()
+    
+    def is_finished(self):
+        """Check if the thread has finished.
+        
+        Returns:
+            bool: True if finished, False otherwise
+        """
+        with self._lock:
+            return self._is_finished
 
-def run_with_progress(context, task_func, task_args=(), task_kwargs=None, title="Processing..."):
+def run_with_progress(context, task_func, task_args=(), task_kwargs=None, title="Processing...", timeout=None):
     """Run a function with progress reporting.
     
     Args:
@@ -221,23 +360,32 @@ def run_with_progress(context, task_func, task_args=(), task_kwargs=None, title=
         task_args (tuple): Arguments for task function
         task_kwargs (dict): Keyword arguments for task function
         title (str): Title for the progress operation
+        timeout (float, optional): Timeout in seconds
         
     Returns:
         Any: Result of the task function
         
     Raises:
         Exception: Any exception raised by the task function
+        TimeoutError: If the operation times out
     """
     # Create and start thread
-    thread = ProgressThread(context, task_func, task_args, task_kwargs, title)
+    thread = ProgressThread(context, task_func, task_args, task_kwargs or {}, title)
     thread.start()
+    
+    start_time = time.time()
     
     # Wait for thread to finish
     while thread.is_alive():
-        # Check for Blender cancel
-        if context.window_manager.is_interface_locked():
+        # Check for timeout
+        if timeout and time.time() - start_time > timeout:
             thread.cancel()
-            thread.join()
+            raise TimeoutError(f"Operation timed out after {timeout} seconds")
+        
+        # Check for Blender cancel
+        if context and hasattr(context, 'window_manager') and context.window_manager.is_interface_locked():
+            thread.cancel()
+            thread.join(1.0)  # Give thread a second to clean up
             raise Exception("Operation cancelled by user")
         
         # Give Blender some time to update UI
@@ -272,11 +420,6 @@ class MATH_OT_ProgressModal(bpy.types.Operator):
         default="Processing..."
     )
     
-    cancelled: bpy.props.BoolProperty(
-        name="Cancelled",
-        default=False
-    )
-    
     # Internal variables
     _timer = None
     _thread = None
@@ -284,6 +427,7 @@ class MATH_OT_ProgressModal(bpy.types.Operator):
     _task_args = None
     _task_kwargs = None
     _callback = None
+    _is_cancelled = False
     
     def modal(self, context, event):
         """Modal function for handling events.
@@ -295,21 +439,38 @@ class MATH_OT_ProgressModal(bpy.types.Operator):
         Returns:
             set: Operator return state
         """
-        # Update progress bar
+        # Check for escape key to cancel
+        if event.type == 'ESC':
+            self._is_cancelled = True
+            if self._thread and self._thread.is_alive():
+                self._thread.cancel()
+            self.cancel(context)
+            self.report({'INFO'}, "Operation cancelled by user")
+            return {'CANCELLED'}
+            
+        # Update progress bar if thread is running
         if self._thread and self._thread.is_alive():
-            self.progress = self._thread.progress
-            self.message = self._thread.message
+            with _progress_lock:
+                self.progress = _progress_state['value']
+                self.message = _progress_state['message']
+                
+                if _progress_state['canceled']:
+                    self._is_cancelled = True
+                    self.cancel(context)
+                    self.report({'INFO'}, "Operation cancelled")
+                    return {'CANCELLED'}
+            
+            # Update UI display
             if context.area:
                 context.area.header_text_set(self.message)
             
-            # Handle cancellation
-            if event.type == 'ESC':
-                self.cancelled = True
-                self._thread.cancel()
+            return {'RUNNING_MODAL'}
+        else:
+            # Thread has completed or failed
+            if self._is_cancelled:
                 self.cancel(context)
                 return {'CANCELLED'}
-        else:
-            # Task completed or failed
+                
             if self._thread and self._thread.error:
                 self.report({'ERROR'}, str(self._thread.error))
                 self.cancel(context)
@@ -324,8 +485,10 @@ class MATH_OT_ProgressModal(bpy.types.Operator):
                 
                 self.cancel(context)
                 return {'FINISHED'}
-        
-        return {'RUNNING_MODAL'}
+            else:
+                # No thread was running
+                self.cancel(context)
+                return {'CANCELLED'}
     
     def execute(self, context):
         """Execute the operator.
@@ -336,11 +499,17 @@ class MATH_OT_ProgressModal(bpy.types.Operator):
         Returns:
             set: Operator return state
         """
+        # Reset cancelled flag
+        self._is_cancelled = False
+        
         # Start timer
         wm = context.window_manager
         self._timer = wm.event_timer_add(0.1, window=context.window)
         
-        # Start thread
+        # Initialize progress
+        start_progress(context, self.message)
+        
+        # Start thread if task function is provided
         if self._task_func:
             self._thread = ProgressThread(
                 context, 
@@ -364,9 +533,8 @@ class MATH_OT_ProgressModal(bpy.types.Operator):
         if self._timer:
             wm.event_timer_remove(self._timer)
         
-        # Remove progress bar
-        if context.area:
-            context.area.header_text_set(None)
+        # End progress
+        end_progress(context)
         
         # Cancel thread if running
         if self._thread and self._thread.is_alive():
@@ -392,6 +560,63 @@ def run_modal_with_progress(context, task_func, task_args=None, task_kwargs=None
     
     # Run operator
     bpy.ops.math.progress_modal(message=title)
+
+# ----------------------------------------
+# Utilities for batch processing with progress
+# ----------------------------------------
+
+def batch_process(items, process_func, context=None, title="Processing batch", 
+                 modal=False, callback=None, chunk_size=10):
+    """Process a batch of items with progress reporting.
+    
+    Args:
+        items (list): List of items to process
+        process_func (callable): Function to process each item
+        context (bpy.types.Context, optional): Current context
+        title (str): Title for the progress operation
+        modal (bool): Whether to use modal progress reporting
+        callback (callable, optional): Function to call when done (for modal processing)
+        chunk_size (int): Number of items to process in each chunk
+        
+    Returns:
+        list: Results of processing each item (if not modal)
+    """
+    def batch_task(progress_callback=None):
+        results = []
+        total = len(items)
+        
+        # Process in chunks to reduce UI update overhead
+        for i in range(0, total, chunk_size):
+            chunk = items[i:i+chunk_size]
+            chunk_results = []
+            
+            for j, item in enumerate(chunk):
+                # Process item
+                result = process_func(item)
+                chunk_results.append(result)
+                
+                # Report progress for each item
+                current = i + j + 1
+                if progress_callback:
+                    if not progress_callback(current / total, f"Processing item {current}/{total}"):
+                        return results  # Cancelled
+            
+            # Extend results after each chunk
+            results.extend(chunk_results)
+            
+            # Force a redraw for every chunk
+            if context and hasattr(context, 'area'):
+                context.area.tag_redraw()
+        
+        return results
+    
+    if modal:
+        # Use modal progress reporting
+        run_modal_with_progress(context, batch_task, title=title, callback=callback)
+        return None
+    else:
+        # Use non-modal progress reporting
+        return run_with_progress(context, batch_task, title=title)
 
 # ----------------------------------------
 # Registration
