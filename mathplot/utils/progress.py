@@ -3,7 +3,7 @@
 import bpy
 import time
 import threading
-from . import materials
+from mathutils import Vector
 
 # ----------------------------------------
 # Progress Reporting Functions
@@ -24,8 +24,9 @@ def report_progress(context, progress, message):
     context.window_manager.progress_update(int(progress * 100))
     
     # Set status message in the header
-    if hasattr(context.area, "header_text_set"):
-        context.area.header_text_set(message)
+    if hasattr(context, "area") and context.area:
+        if hasattr(context.area, "header_text_set"):
+            context.area.header_text_set(message)
     
     # Force UI update
     context.window_manager.progress_update(int(progress * 100))
@@ -38,8 +39,9 @@ def start_progress(context, title="Processing..."):
         title (str): Title for the progress operation
     """
     context.window_manager.progress_begin(0, 100)
-    if hasattr(context.area, "header_text_set"):
-        context.area.header_text_set(title)
+    if hasattr(context, "area") and context.area:
+        if hasattr(context.area, "header_text_set"):
+            context.area.header_text_set(title)
 
 def end_progress(context):
     """End progress reporting.
@@ -48,8 +50,9 @@ def end_progress(context):
         context (bpy.types.Context): Current context
     """
     context.window_manager.progress_end()
-    if hasattr(context.area, "header_text_set"):
-        context.area.header_text_set(None)
+    if hasattr(context, "area") and context.area:
+        if hasattr(context.area, "header_text_set"):
+            context.area.header_text_set(None)
 
 # ----------------------------------------
 # Advanced Progress Visualization
@@ -87,8 +90,14 @@ class ProgressVisualizer:
         self.indicator_obj.name = "ProgressIndicator"
         
         # Create a material
-        material = materials.create_material("ProgressIndicator_Material", (0.2, 0.6, 1.0, 0.8))
-        materials.apply_material(self.indicator_obj, material)
+        material = bpy.data.materials.new("ProgressIndicator_Material")
+        material.diffuse_color = (0.2, 0.6, 1.0, 0.8)
+        
+        # Apply material
+        if self.indicator_obj.data.materials:
+            self.indicator_obj.data.materials[0] = material
+        else:
+            self.indicator_obj.data.materials.append(material)
         
         # Make semi-transparent
         material.blend_method = 'BLEND'
@@ -290,7 +299,8 @@ class MATH_OT_ProgressModal(bpy.types.Operator):
         if self._thread and self._thread.is_alive():
             self.progress = self._thread.progress
             self.message = self._thread.message
-            context.area.header_text_set(self.message)
+            if context.area:
+                context.area.header_text_set(self.message)
             
             # Handle cancellation
             if event.type == 'ESC':
@@ -355,7 +365,8 @@ class MATH_OT_ProgressModal(bpy.types.Operator):
             wm.event_timer_remove(self._timer)
         
         # Remove progress bar
-        context.area.header_text_set(None)
+        if context.area:
+            context.area.header_text_set(None)
         
         # Cancel thread if running
         if self._thread and self._thread.is_alive():

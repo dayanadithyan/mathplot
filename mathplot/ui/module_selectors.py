@@ -3,9 +3,6 @@
 import bpy
 from bpy.types import Operator
 
-# Extract and adapt the module selector operators from math_playground_fixed.py
-# WM_OT_MathLinearAlgebra, WM_OT_MathNumberTheory, etc.
-
 class WM_OT_MathLinearAlgebra(Operator):
     """Switch to Linear Algebra module"""
     bl_idname = "wm.math_linear_algebra"
@@ -15,12 +12,39 @@ class WM_OT_MathLinearAlgebra(Operator):
         context.scene.math_playground.active_module = 'LINEAR_ALGEBRA'
         return {'FINISHED'}
 
-# Add similar operators for other modules
+class WM_OT_MathNumberTheory(Operator):
+    """Switch to Number Theory module"""
+    bl_idname = "wm.math_number_theory"
+    bl_label = "Number Theory"
+    
+    def execute(self, context):
+        context.scene.math_playground.active_module = 'NUMBER_THEORY'
+        return {'FINISHED'}
+
+class WM_OT_MathAnalysis(Operator):
+    """Switch to Analysis module"""
+    bl_idname = "wm.math_analysis"
+    bl_label = "Analysis"
+    
+    def execute(self, context):
+        context.scene.math_playground.active_module = 'ANALYSIS'
+        return {'FINISHED'}
+
+class WM_OT_MathGraphTheory(Operator):
+    """Switch to Graph Theory module"""
+    bl_idname = "wm.math_graph_theory"
+    bl_label = "Graph Theory"
+    
+    def execute(self, context):
+        context.scene.math_playground.active_module = 'GRAPH_THEORY'
+        return {'FINISHED'}
 
 # Registration functions
 classes = [
     WM_OT_MathLinearAlgebra,
-    # Add other operator classes
+    WM_OT_MathNumberTheory,
+    WM_OT_MathAnalysis,
+    WM_OT_MathGraphTheory,
 ]
 
 def register():

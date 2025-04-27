@@ -1,30 +1,12 @@
 # utils/collections.py - Collection utilities for Math Playground
 
 import bpy
-from .. import progress
+from . import progress
 
 # ----------------------------------------
 # Collection Management Functions
 # ----------------------------------------
-class CollectionHelpers:
-    """Helper methods for collection management"""
-    """Helper methods for Blender collections"""
-    @staticmethod
-    def link_to_scene(obj, collection_name="Math_Playground"):
-        add_object_to_collection(obj, collection_name)  # Reuse your existing function
 
-    @staticmethod
-    def ensure_exists(name):
-        return get_collection(name)  # Reuse your existing function
-    @staticmethod
-    def safe_get_collection(name):
-        return bpy.data.collections.get(name, None)
-
-    @staticmethod
-    def purge_empty_collections():
-        for col in [c for c in bpy.data.collections if not c.objects]:
-            bpy.data.collections.remove(col)
-            
 def get_collection(name, parent=None):
     """Get or create a collection with the given name.
     
@@ -35,6 +17,21 @@ def get_collection(name, parent=None):
     Returns:
         bpy.types.Collection: The retrieved or created collection
     """
+    # Handle path notation (parent/child)
+    if "/" in name:
+        parts = name.split("/")
+        current_parent = parent
+        current_name = parts[0]
+        
+        # Get or create the first collection in the path
+        collection = get_collection(current_name, current_parent)
+        
+        # Process the rest of the path
+        for part in parts[1:]:
+            collection = get_collection(part, collection)
+        
+        return collection
+    
     # Get existing collection
     collection = bpy.data.collections.get(name)
     
@@ -113,9 +110,6 @@ def create_module_collections():
     number_theory = get_collection("Math_NumberTheory", main)
     analysis = get_collection("Math_Analysis", main)
     graph_theory = get_collection("Math_GraphTheory", main)
-    differential = get_collection("Math_Differential", main)
-    complex_analysis = get_collection("Math_Complex", main)
-    fourier = get_collection("Math_Fourier", main)
     
     # Create subcollections for each module
     get_collection("Math_Vectors", linear_algebra)
@@ -130,15 +124,6 @@ def create_module_collections():
     
     get_collection("Math_Graphs", graph_theory)
     get_collection("Math_GraphAlgorithms", graph_theory)
-    
-    get_collection("Math_ODE", differential)
-    get_collection("Math_PDE", differential)
-    
-    get_collection("Math_ComplexPlots", complex_analysis)
-    get_collection("Math_RiemannSphere", complex_analysis)
-    
-    get_collection("Math_FourierSeries", fourier)
-    get_collection("Math_FourierComponents", fourier)
 
 def clear_module_collections(module_name=None):
     """Clear collections for a specific module or all modules.
@@ -166,18 +151,6 @@ def clear_module_collections(module_name=None):
         "GRAPH_THEORY": {
             "path": f"{main_path}/Math_GraphTheory",
             "subcollections": ["Math_Graphs", "Math_GraphAlgorithms"]
-        },
-        "DIFFERENTIAL": {
-            "path": f"{main_path}/Math_Differential",
-            "subcollections": ["Math_ODE", "Math_PDE"]
-        },
-        "COMPLEX": {
-            "path": f"{main_path}/Math_Complex",
-            "subcollections": ["Math_ComplexPlots", "Math_RiemannSphere"]
-        },
-        "FOURIER": {
-            "path": f"{main_path}/Math_Fourier",
-            "subcollections": ["Math_FourierSeries", "Math_FourierComponents"]
         }
     }
     
@@ -232,123 +205,6 @@ def find_layer_collection(layer_collection, name):
     
     return None
 
-def isolate_collection(collection_name):
-    """Make only the specified collection visible.
-    
-    Args:
-        collection_name (str): Name of the collection to isolate
-    """
-    # Get all collections
-    layer_collections = get_all_layer_collections(bpy.context.view_layer.layer_collection)
-    
-    # Hide all collections
-    for layer_collection in layer_collections:
-        layer_collection.exclude = True
-    
-    # Show the target collection
-    target = find_layer_collection(bpy.context.view_layer.layer_collection, collection_name)
-    if target:
-        # Also make parent collections visible
-        make_parents_visible(target)
-        target.exclude = False
-
-def get_all_layer_collections(layer_collection):
-    """Get all layer collections recursively.
-    
-    Args:
-        layer_collection (bpy.types.LayerCollection): The root collection
-        
-    Returns:
-        list: List of all layer collections
-    """
-    collections = [layer_collection]
-    
-    for child in layer_collection.children:
-        collections.extend(get_all_layer_collections(child))
-    
-    return collections
-
-def make_parents_visible(layer_collection):
-    """Make all parent collections visible.
-    
-    Args:
-        layer_collection (bpy.types.LayerCollection): The collection to start from
-    """
-    # Get the parent collections
-    parents = []
-    parent = layer_collection.parent
-    while parent:
-        parents.append(parent)
-        parent = parent.parent
-    
-    # Make all parents visible
-    for parent in parents:
-        parent.exclude = False
-
-# ----------------------------------------
-# Collection Organization Functions
-# ----------------------------------------
-
-def organize_objects_by_type(collection_name, create_subcollections=True):
-    """Organize objects in a collection by their type.
-    
-    Args:
-        collection_name (str): Name of the collection to organize
-        create_subcollections (bool): Whether to create subcollections for each type
-    """
-    collection = bpy.data.collections.get(collection_name)
-    if not collection:
-        return
-    
-    # Group objects by type
-    object_groups = {}
-    for obj in collection.objects:
-        obj_type = obj.type
-        if obj_type not in object_groups:
-            object_groups[obj_type] = []
-        object_groups[obj_type].append(obj)
-    
-    # Create subcollections and move objects
-    for obj_type, objects in object_groups.items():
-        if create_subcollections:
-            # Create subcollection for this type
-            subcollection_name = f"{collection_name}_{obj_type}"
-            subcollection = get_collection(subcollection_name, collection)
-            
-            # Move objects to subcollection
-            for obj in objects:
-                collection.objects.unlink(obj)
-                subcollection.objects.link(obj)
-        else:
-            # Just group objects by name prefix
-            for obj in objects:
-                obj.name = f"{obj_type}_{obj.name}"
-
-def create_collection_instance(collection_name, location=(0, 0, 0)):
-    """Create an instance of a collection at a specific location.
-    
-    Args:
-        collection_name (str): Name of the collection to instance
-        location (tuple): Location for the instance
-        
-    Returns:
-        bpy.types.Object: The created instance object
-    """
-    collection = bpy.data.collections.get(collection_name)
-    if not collection:
-        return None
-    
-    # Create empty object
-    empty = bpy.data.objects.new(f"{collection_name}_instance", None)
-    empty.location = location
-    empty.instance_type = 'COLLECTION'
-    empty.instance_collection = collection
-    
-    # Link to scene
-    bpy.context.scene.collection.objects.link(empty)
-    
-    return empty
-
 # ----------------------------------------
 # Registration
 # ----------------------------------------
@@ -362,7 +218,6 @@ def register():
 def unregister():
     """Unregister collection utilities"""
     # Clear module collections but don't delete them
-    for module_name in ["LINEAR_ALGEBRA", "NUMBER_THEORY", "ANALYSIS", "GRAPH_THEORY", 
-                        "DIFFERENTIAL", "COMPLEX", "FOURIER"]:
+    for module_name in ["LINEAR_ALGEBRA", "NUMBER_THEORY", "ANALYSIS", "GRAPH_THEORY"]:
         clear_module_collections(module_name)
     print("Math Playground: Collection utilities unregistered")

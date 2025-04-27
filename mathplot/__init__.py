@@ -1,48 +1,23 @@
-bl_info = {
-    "name": "mathplot",
-    "author": "your-name",
-    "version": (2, 0, 0),
-    "blender": (3, 0, 0),
-    "location": "View3D > Tool Shelf",
-    "description": "a collection of math visualization tools",
-    "warning": "",
-    "wiki_url": "",
-    "category": "Development",
-}
+# operators/__init__.py - Operators module initialization
 
-# import submodules from the local package
-from .utils.collections import CollectionHelpers
-from .math_utils import MathUtils
-from .progress import ProgressTracker
-from .properties import MathPlotProperties
-from .utils import collections  # Add this line
-
-
-# import blender operators, ui, algorithms, utils
-from .operators import register as register_operators, unregister as unregister_operators
-from .ui import register as register_ui, unregister as unregister_ui
-from .algorithms import register as register_algorithms, unregister as unregister_algorithms
-from .utils import register as register_utils, unregister as unregister_utils
+from . import linear_algebra
+from . import number_theory
+from . import analysis
+from . import graph_theory
+from . import common
 
 def register():
-    # register core modules if they need Blender registration hooks
-    MathPlotProperties.register()
-    ProgressTracker.register()
-    collections.register()  # Call your collection registration
-    MathUtils.register()
-    # register subpackages
-    register_utils()
-    register_operators()
-    register_ui()
-    register_algorithms()
+    """Register all operator modules"""
+    linear_algebra.register()
+    number_theory.register()
+    analysis.register()
+    graph_theory.register()
+    common.register()
 
 def unregister():
-    # unregister in reverse order
-    unregister_algorithms()
-    unregister_ui()
-    unregister_operators()
-    unregister_utils()
-    MathUtils.unregister()
-    CollectionHelpers.unregister()
-    ProgressTracker.unregister()
-    MathPlotProperties.unregister()
+    """Unregister all operator modules"""
+    common.unregister()
+    graph_theory.unregister()
+    analysis.unregister()
+    number_theory.unregister()
+    linear_algebra.unregister()
