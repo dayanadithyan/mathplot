@@ -164,7 +164,8 @@ class MATH_OT_PlotFunction(Operator):
         collection.objects.link(curve_obj)
         
         # Apply material
-        materials.apply_material(curve_obj, material)
+        materials.apply_material(curve_obj, func_material)
+
         
         progress.report_progress(context, 0.9, "Creating coordinate axes...")
         
@@ -467,7 +468,8 @@ class MATH_OT_PlotParametric(Operator):
             collection.objects.link(curve_obj)
             
             # Apply material
-            materials.apply_material(curve_obj, material)
+            materials.apply_material(curve_obj, func_material)
+
             
             progress.report_progress(context, 0.9, "Creating coordinate axes...")
             
