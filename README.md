@@ -4,7 +4,7 @@ UPDATE (4/25): Need to lint and cleanup sxyntax issues, else functional
 
 Blender add-on for mathematical visualization in 3D space. Implements algorithms for linear algebra, number theory, analysis, graph theory, differential equations, complex analysis, and Fourier series. More to come.
 
-![image](https://github.com/user-attachments/assets/3c16c966-3de1-49da-a203-fa7d607a27be)
+![image](https://github.com/user-attachments/assets/379b95ab-cbf4-49e4-afb3-8c6d4d161fc2)
 
 ## Features
 
